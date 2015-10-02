@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(nord_planning)
-set(CMAKE_CXX_FLAGS "--std=c++14 ${CMAKE_CXX_FLAGS}")
+set(CMAKE_CXX_FLAGS "--std=c++11 ${CMAKE_CXX_FLAGS}")
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -42,6 +42,8 @@ find_package(catkin REQUIRED COMPONENTS
 ##     and list every .msg/.srv/.action file to be processed
 ##   * uncomment the generate_messages entry below
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
+
+catkin_package(CATKIN_DEPENDS message_runtime)
 
 ## Generate messages in the 'msg' folder
 # add_message_files(
@@ -129,15 +131,20 @@ include_directories(
 
 ## Declare a C++ executable
 # add_executable(nord_planning_node src/nord_planning_node.cpp)
+add_executable(nord_planning src/nord_planning.cpp)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
 # add_dependencies(nord_planning_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(nord_planning ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
 # target_link_libraries(nord_planning_node
 #   ${catkin_LIBRARIES}
 # )
+target_link_libraries(nord_planning
+  ${catkin_LIBRARIES}
+)
 
 #############
 ## Install ##
