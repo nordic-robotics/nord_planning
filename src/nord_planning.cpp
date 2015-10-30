@@ -3,6 +3,8 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+#include "map.hpp"
+#include <math.h>  
 
 class Maps{
 	public:
@@ -368,7 +370,96 @@ class Maps{
 			}			
 		}
 		
-		
+		void create_graph(){
+			int cx,cy;
+			int node=3;
+			int radius=36; //Look out for the dist_point when creating the point_map, 36~= sqrt(25^2+25^2)
+			int i,j;
+			int flag,wall_flag;
+			int fx,fy;
+			int mx,my;
+			
+			std::vector<dijkstra::point> graph;
+						
+			for(cx=0;cx<int(max_x*100+1);cx+=1){
+				for(cy=0;cy<int(max_y*100+1);cy+=1){
+					if(pointmap[cx][cy]==2){
+						graph.emplace_back(cx, cy);
+						pointmap[cx][cy]=node;
+						node+=1;
+					}
+				}
+			}
+			dijkstra::map m(std::move(graph));
+			
+			for(cx=0;cx<int(max_x*100+1);cx+=1){
+				for(cy=0;cy<int(max_y*100+1);cy+=1){
+					if(pointmap[cx][cy]>2){
+						node=pointmap[cx][cy];
+						for(i=cx-radius;i<=cx+radius;i+=1){
+							if((i>=0) && (i<int(max_x*100+1))){
+								for(j=cy-radius;j<=cy+radius;j+=1){
+									if((j>=0) && (j<int(max_y*100+1))){
+										
+										if(pointmap[i][j]!=node && pointmap[i][j]>2 && sqrt(i*i+j*j)<=radius){
+											fx=cx;
+											fy=cy;
+											mx=i-cx;
+											my=j-cy;
+											wall_flag=0;
+											flag=0;
+											
+											while(mx!=0 || my!=0){
+												if(flag==0){
+													if(mx>0){
+														fx+=1;
+														mx-=1;
+														if(pointmap[fx][fy]==1){
+															wall_flag=1;
+															break;
+														}
+													}else if(mx<0){
+														fx-=1;
+														mx+=1;
+														if(pointmap[fx][fy]==1){
+															wall_flag=1;
+															break;
+														}
+													}
+													flag=1;
+												}else{
+													if(my>0){
+														fy+=1;
+														my-=1;
+														if(pointmap[fx][fy]==1){
+															wall_flag=1;
+															break;
+														}
+													}else if(my<0){
+														fy-=1;
+														my+=1;
+														if(pointmap[fx][fy]==1){
+															wall_flag=1;
+															break;
+														}
+													}
+													flag=0;
+												}
+											}
+											
+											if(wall_flag==0){
+												 m.connect((pointmap[cx][cy]-3), (pointmap[i][j]-3));
+											}
+										}
+									}
+								}
+							}
+						}
+						
+					}
+				}
+			}
+		}
 	
 	private:
 	
@@ -463,5 +554,6 @@ int main(int argc, char** argv)
 	
 	run.move_points();
 	run.print_info();
+	run.crate_graph();
     return 0;
 }
