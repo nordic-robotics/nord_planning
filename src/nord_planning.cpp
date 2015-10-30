@@ -225,7 +225,7 @@ class Maps{
 				my1=int(y1*100);
 
 				if(mx0!=mx1){
-					if(my0!=my1){//diagonal lines deal with this later
+					if(my0!=my1){//diagonal lines deal with this later!!!! Do we need to deal with this?
 
 
 					}else{
@@ -367,6 +367,8 @@ class Maps{
 				file2<<'\n';
 			}			
 		}
+		
+		
 	
 	private:
 	
