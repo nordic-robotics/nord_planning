@@ -42,7 +42,7 @@ namespace dijkstra
         }
     }
 
-    //const std::vector<point>& get_graph() { return graph; }
+    const std::vector<point>& map::get_graph() const { return graph; }
 
     path& map::find(const point& start_approx, const point& goal_approx)
     {
