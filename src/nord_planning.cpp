@@ -6,6 +6,7 @@
 #include "map.hpp"
 #include <math.h>  
 
+
 class Maps{
 	public:
 		int n_wall=29;int n_point=19;
@@ -350,7 +351,6 @@ class Maps{
 					}
 				}
 			}
-			
 		}
 
 		void print_info(){
@@ -555,6 +555,7 @@ int main(int argc, char** argv)
 	ROS_INFO("OLA");
 	
 	run.move_points();
+
 	
 	run.create_graph();
 	run.print_info();
