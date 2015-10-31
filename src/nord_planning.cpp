@@ -8,7 +8,8 @@
 
 class Maps{
 	public:
-		int n_wall=29;int n_point=19;
+		int n_wall=29;
+		int n_point=19;
 	
 		Maps(): pot_wall(n_wall,std::vector<long int> (n_wall)), pot_point(n_point,std::vector<long int> (n_point)){
 						
