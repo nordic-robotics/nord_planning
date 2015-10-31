@@ -8,8 +8,7 @@
 
 class Maps{
 	public:
-		int n_wall=29;
-		int n_point=19;
+		int n_wall=29;int n_point=19;
 	
 		Maps(): pot_wall(n_wall,std::vector<long int> (n_wall)), pot_point(n_point,std::vector<long int> (n_point)){
 						
@@ -344,6 +343,13 @@ class Maps{
 				i+=1;
 				ROS_INFO("Iteration: %d",i);
 			}
+			for (i=0;i<int(max_x*100+1);i+=1){
+				for(int j=0;j<int(max_y*100+1);j+=1){
+					if(pointmap[i][j]>0){
+						map[i][j]=2;
+					}
+				}
+			}
 			
 		}
 
@@ -354,11 +360,7 @@ class Maps{
 			ROS_INFO("printing_file");
 			for (i=0;i<int(max_x*100+1);i+=1){
 				for(j=0;j<int(max_y*100+1);j+=1){
-					if(pointmap[i][j]>0){
-						file<<'2'<<' ';
-					}else{
-					 file<<map[i][j]<<' ';
-					}
+					file<<map[i][j]<<' ';
 				}
 				file<<'\n';
 			}	
@@ -384,9 +386,9 @@ class Maps{
 						
 			for(cx=0;cx<int(max_x*100+1);cx+=1){
 				for(cy=0;cy<int(max_y*100+1);cy+=1){
-					if(pointmap[cx][cy]==2){
+					if(map[cx][cy]==2){
 						graph.emplace_back(cx, cy);
-						pointmap[cx][cy]=node;
+						map[cx][cy]=node;
 						node+=1;
 					}
 				}
@@ -395,18 +397,17 @@ class Maps{
 			
 			for(cx=0;cx<int(max_x*100+1);cx+=1){
 				for(cy=0;cy<int(max_y*100+1);cy+=1){
-					if(pointmap[cx][cy]>2){
-						node=pointmap[cx][cy];
+					if(map[cx][cy]>2){
+						node=map[cx][cy];
 						for(i=cx-radius;i<=cx+radius;i+=1){
 							if((i>=0) && (i<int(max_x*100+1))){
 								for(j=cy-radius;j<=cy+radius;j+=1){
 									if((j>=0) && (j<int(max_y*100+1))){
-										
-										if(pointmap[i][j]!=node && pointmap[i][j]>2 && sqrt(i*i+j*j)<=radius){
+										mx=i-cx;
+										my=j-cy;
+										if(map[i][j]!=node && map[i][j]>2 && sqrt(mx*mx+my*my)<=radius){//meter map[i][j]>node porque a ordem de escolha é igual a anterior o garante que o no anterior ja foi visitado não precisa de ir la outra vez....
 											fx=cx;
 											fy=cy;
-											mx=i-cx;
-											my=j-cy;
 											wall_flag=0;
 											flag=0;
 											
@@ -415,14 +416,14 @@ class Maps{
 													if(mx>0){
 														fx+=1;
 														mx-=1;
-														if(pointmap[fx][fy]==1){
+														if(map[fx][fy]==1){
 															wall_flag=1;
 															break;
 														}
 													}else if(mx<0){
 														fx-=1;
 														mx+=1;
-														if(pointmap[fx][fy]==1){
+														if(map[fx][fy]==1){
 															wall_flag=1;
 															break;
 														}
@@ -432,14 +433,14 @@ class Maps{
 													if(my>0){
 														fy+=1;
 														my-=1;
-														if(pointmap[fx][fy]==1){
+														if(map[fx][fy]==1){
 															wall_flag=1;
 															break;
 														}
 													}else if(my<0){
 														fy-=1;
 														my+=1;
-														if(pointmap[fx][fy]==1){
+														if(map[fx][fy]==1){
 															wall_flag=1;
 															break;
 														}
@@ -449,7 +450,7 @@ class Maps{
 											}
 											
 											if(wall_flag==0){
-												 m.connect((pointmap[cx][cy]-3), (pointmap[i][j]-3));
+												 m.connect((map[cx][cy]-3),(map[i][j]-3));
 											}
 										}
 									}
@@ -554,7 +555,8 @@ int main(int argc, char** argv)
 	ROS_INFO("OLA");
 	
 	run.move_points();
+	
+	run.create_graph();
 	run.print_info();
-	run.crate_graph();
     return 0;
 }

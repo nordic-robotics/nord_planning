@@ -42,6 +42,8 @@ namespace dijkstra
         }
     }
 
+    //const std::vector<point>& get_graph() { return graph; }
+
     path& map::find(const point& start_approx, const point& goal_approx)
     {
         auto start = closest(start_approx);

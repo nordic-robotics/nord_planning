@@ -132,7 +132,7 @@ include_directories(
 
 ## Declare a C++ executable
 # add_executable(nord_planning_node src/nord_planning_node.cpp)
-add_executable(nord_planning src/nord_planning.cpp)
+add_executable(nord_planning src/nord_planning.cpp src/map.cpp src/point.cpp src/path.cpp)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
