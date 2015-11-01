@@ -357,6 +357,7 @@ class Maps{
 			int i=0;int j=0;
 			std::ofstream file(ros::package::getPath("nord_planning")+"/Map.txt");
 			std::ofstream file2(ros::package::getPath("nord_planning")+"/Map_pot.txt");
+			std::ofstream file3(ros::package::getPath("nord_planning")+"/links.txt");
 			ROS_INFO("printing_file");
 			for (i=0;i<int(max_x*100+1);i+=1){
 				for(j=0;j<int(max_y*100+1);j+=1){
@@ -370,7 +371,16 @@ class Maps{
 					 file2<<pot_map[i][j]<<' ';
 				}
 				file2<<'\n';
-			}			
+			}
+			
+			for (auto& node : m.get_graph())
+			{
+				file3<< node.x <<' '<< node.y <<" : ";
+				for (auto link : node.get_links()){
+					file3<<"\t"<<link->x<<' '<<link->y<<"\n\t";
+				}
+				file3<<"\n\n\n";
+			}
 		}
 		
 		void create_graph(){
@@ -382,8 +392,7 @@ class Maps{
 			int fx,fy;
 			int mx,my;
 			
-			std::vector<dijkstra::point> graph;
-						
+				
 			for(cx=0;cx<int(max_x*100+1);cx+=1){
 				for(cy=0;cy<int(max_y*100+1);cy+=1){
 					if(map[cx][cy]==2){
@@ -393,7 +402,7 @@ class Maps{
 					}
 				}
 			}
-			dijkstra::map m(std::move(graph));
+			m = dijkstra::map(std::move(graph));
 			
 			for(cx=0;cx<int(max_x*100+1);cx+=1){
 				for(cy=0;cy<int(max_y*100+1);cy+=1){
@@ -405,7 +414,7 @@ class Maps{
 									if((j>=0) && (j<int(max_y*100+1))){
 										mx=i-cx;
 										my=j-cy;
-										if(map[i][j]!=node && map[i][j]>2 && sqrt(mx*mx+my*my)<=radius){//meter map[i][j]>node porque a ordem de escolha é igual a anterior o garante que o no anterior ja foi visitado não precisa de ir la outra vez....
+										if(map[i][j]>node && sqrt(mx*mx+my*my)<=radius){//meter map[i][j]>node porque a ordem de escolha é igual a anterior o garante que o no anterior ja foi visitado não precisa de ir la outra vez....
 											fx=cx;
 											fy=cy;
 											wall_flag=0;
@@ -450,6 +459,8 @@ class Maps{
 											}
 											
 											if(wall_flag==0){
+												ROS_INFO("connected: %d : %d",(map[cx][cy]-3),(map[i][j]-3));
+												ROS_INFO("connected: %d %d : %d %d",cx,cy,i,j);
 												 m.connect((map[cx][cy]-3),(map[i][j]-3));
 											}
 										}
@@ -461,6 +472,7 @@ class Maps{
 					}
 				}
 			}
+
 		}
 	
 	private:
@@ -471,6 +483,8 @@ class Maps{
 		std::vector< std::vector<long int> > pot_map; std::vector< std::vector<int> > map; 
 		std::vector< std::vector<int> > pointmap;
 		int num_points;
+		dijkstra::map m;
+		std::vector<dijkstra::point> graph;
 				
 		void add_pot(int cx, int cy,std::vector< std::vector<long int> > pot,int n){
 			int i,j;

@@ -24,6 +24,7 @@ namespace dijkstra
     class map
     {
     public:
+        map() { };
         map(std::vector<point>&& graph) : graph(graph) { };
         map(const std::vector<point>& graph) : graph(graph) { };
 
