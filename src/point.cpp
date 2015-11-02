@@ -23,6 +23,7 @@ namespace dijkstra
     void point::connect(point* other)
     {
         links.push_back(other);
+        //other->links.push_back(this);
     }
 
     bool operator==(const point& lhs, const point& rhs)

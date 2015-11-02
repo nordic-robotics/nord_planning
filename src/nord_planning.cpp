@@ -386,11 +386,13 @@ class Maps{
 		void create_graph(){
 			int cx,cy;
 			int node=3;
-			int radius=36; //Look out for the dist_point when creating the point_map, 36~= sqrt(25^2+25^2)
+			int square=10;//half the size of the side of the square that goes through the line and sees if there is any wall near that path
 			int i,j;
-			int flag,wall_flag;
+			int wall_flag;
 			int fx,fy;
 			int mx,my;
+			float a,b;
+			int calc;
 			
 				
 			for(cx=0;cx<int(max_x*100+1);cx+=1){
@@ -408,62 +410,88 @@ class Maps{
 				for(cy=0;cy<int(max_y*100+1);cy+=1){
 					if(map[cx][cy]>2){
 						node=map[cx][cy];
-						for(i=cx-radius;i<=cx+radius;i+=1){
-							if((i>=0) && (i<int(max_x*100+1))){
-								for(j=cy-radius;j<=cy+radius;j+=1){
-									if((j>=0) && (j<int(max_y*100+1))){
-										mx=i-cx;
-										my=j-cy;
-										if(map[i][j]>node && sqrt(mx*mx+my*my)<=radius){//meter map[i][j]>node porque a ordem de escolha é igual a anterior o garante que o no anterior ja foi visitado não precisa de ir la outra vez....
-											fx=cx;
-											fy=cy;
-											wall_flag=0;
-											flag=0;
-											
-											while(mx!=0 || my!=0){
-												if(flag==0){
-													if(mx>0){
-														fx+=1;
-														mx-=1;
-														if(map[fx][fy]==1){
-															wall_flag=1;
-															break;
-														}
-													}else if(mx<0){
-														fx-=1;
-														mx+=1;
+						for(i=0;i<int(max_x*100+1);i+=1){
+							for(j=0;j<int(max_y*100+1);j+=1){
+								if(map[i][j]>node){
+									mx=abs(i-cx);
+									my=abs(j-cy);
+									wall_flag=0;
+									if (mx>=my){
+										a=(((float) cy)-((float) j))/(((float) cx)-((float) i));
+										b=((float) j)-(a*((float) i));
+										if(cx>i){
+											for(fx=i;fx<=cx;fx+=1){
+												calc=(int) (a*fx+b);
+												for(fy=calc-square;fy<=calc+square;fy+=1){
+													if((fy>=0) && (fy<int(max_y*100+1))){
 														if(map[fx][fy]==1){
 															wall_flag=1;
 															break;
 														}
 													}
-													flag=1;
-												}else{
-													if(my>0){
-														fy+=1;
-														my-=1;
-														if(map[fx][fy]==1){
-															wall_flag=1;
-															break;
-														}
-													}else if(my<0){
-														fy-=1;
-														my+=1;
-														if(map[fx][fy]==1){
-															wall_flag=1;
-															break;
-														}
-													}
-													flag=0;
+												}
+												if(wall_flag==1){
+													break;
 												}
 											}
-											
-											if(wall_flag==0){
-												ROS_INFO("connected: %d : %d",(map[cx][cy]-3),(map[i][j]-3));
-												ROS_INFO("connected: %d %d : %d %d",cx,cy,i,j);
-												 m.connect((map[cx][cy]-3),(map[i][j]-3));
+										}else{
+											for(fx=cx;fx<=i;fx+=1){
+												calc=(int) (a*fx+b);
+												for(fy=calc-square;fy<=calc+square;fy+=1){
+													if((fy>=0) && (fy<int(max_y*100+1))){
+														if(map[fx][fy]==1){
+															wall_flag=1;
+															break;
+														}
+													}
+												}
+												if(wall_flag==1){
+													break;
+												}
 											}
 										}
+										
+									}else{
+										a=(((float) cx)-((float) i))/(((float) cy)-((float) j));
+										b=((float) i)-(a*((float) j));
+										if(cy>j){
+											for(fy=j;fy<=cy;fy+=1){
+												calc=(int) (a*fy+b);
+												for(fx=calc-square;fx<=calc+square;fx+=1){
+													if((fx>=0) && (fx<int(max_x*100+1))){
+														if(map[fx][fy]==1){
+															wall_flag=1;
+															break;
+														}
+													}
+												}
+												if(wall_flag==1){
+													break;
+												}
+											}
+										}else{
+											for(fy=cy;fy<=j;fy+=1){
+												calc=(int) (a*fy+b);
+												for(fx=calc-square;fx<=calc+square;fx+=1){
+													if((fx>=0) && (fx<int(max_x*100+1))){
+														if(map[fx][fy]==1){
+															wall_flag=1;
+															break;
+														}
+													}
+												}
+												if(wall_flag==1){
+													break;
+												}
+											}
+										}
+										
+									}
+									
+									if(wall_flag==0){
+										ROS_INFO("connected: %d : %d",(map[cx][cy]-3),(map[i][j]-3));
+										ROS_INFO("connected: %d %d : %d %d",cx,cy,i,j);
+										 m.connect((map[cx][cy]-3),(map[i][j]-3));
 									}
 								}
 							}
