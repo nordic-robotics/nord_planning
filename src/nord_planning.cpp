@@ -11,7 +11,8 @@ class Maps{
 		int n_wall=29;int n_point=19;
 	
 		Maps(): pot_wall(n_wall,std::vector<long int> (n_wall)), pot_point(n_point,std::vector<long int> (n_point)){
-
+			
+			//Initiate wall_point potential matrix
 			for(int i=0;i<=(n_wall-1)/2;i+=1){
 				for(int j=0;j<=(n_wall-1)/2;j+=1){
 					if(i>j){
@@ -28,6 +29,7 @@ class Maps{
 				}
 			}
 			
+			//Initiate node_point potential matrix
 			for(int i=0;i<=(n_point-1)/2;i+=1){
 				for(int j=0;j<=(n_point-1)/2;j+=1){
 					if(i>j){
@@ -56,6 +58,7 @@ class Maps{
 			std::ifstream file(filename);
 			std::string l;
 			
+			//Read file first time to get max e min values to declare map matrix
 			float x0, y0, x1, y1;
 			while (std::getline(file, l))
 			{
@@ -86,7 +89,7 @@ class Maps{
 					map1[cx][cy]=0;
 				}
 			}
-			
+			//lines will be represented by 1 in the variable "map1" which will be "map" outside this function
 			while (std::getline(file, l))
 			{
 				std::istringstream iss(l);
@@ -104,7 +107,7 @@ class Maps{
 						
 						diffx=mx1-mx0;
 						diffy=my1-my0;
-						if (diffx>=diffy){
+						if (diffx>=diffy){//choose the coord varying the most and create a line depending on that one
 							a=(((float) my0)-((float) my1))/(((float) mx0)-((float) mx1));
 							b=((float) my1)-(a*((float) mx1));
 							if(mx0>mx1){
@@ -149,7 +152,7 @@ class Maps{
 							}
 							
 						}
-					}else{
+					}else{//line which varies in x
 						cy=my0;
 						if(mx0<mx1){
 							for(cx=mx0;cx<=mx1;cx+=1){
@@ -161,7 +164,7 @@ class Maps{
 							}
 						}
 					}
-				}else if(my0!=my1){
+				}else if(my0!=my1){//line which varies in y
 					cx=mx0;
 					if(my0<my1){
 						for(cy=my0;cy<=my1;cy+=1){
@@ -172,7 +175,7 @@ class Maps{
 							map1[cx][cy]=1;
 						}
 					}
-				}else{ 
+				}else{ //just a point not a line
 					map1[mx0][my0]=1;
 				}	
 			}
@@ -187,13 +190,13 @@ class Maps{
 			int cx,cy;
 			int dist_point=25;
 			num_points=0;
-			
+			//Initialize pointmap
 			for(cx=0;cx<int(max_x*100+1);cx+=1){
 				for(cy=0;cy<int(max_y*100+1);cy+=1){
 					pointmap[cx][cy]=0;
 				}
 			}
-			
+			//Spread initial nodes they are represented by 1 in the variable pointmap
 			for(cx=0;cx<int(max_x*100+1);cx+=dist_point){
 				for(cy=0;cy<int(max_y*100+1);cy+=dist_point){
 					pointmap[cx][cy]=1;
@@ -212,15 +215,15 @@ class Maps{
 					pot_map[cx][cy]=0;
 				}
 			}
-
+			
 			for(cx=0;cx<int(max_x*100+1);cx+=1){
 				for(cy=0;cy<int(max_y*100+1);cy+=1){
 					
-					if(map[cx][cy]==1){
+					if(map[cx][cy]==1){//Add potential field of wall in given coords
 						add_pot(cx,cy,pot_wall,n_wall);
 					}
 					
-					if(pointmap[cx][cy]==1){
+					if(pointmap[cx][cy]==1){//Add potential field of node in given coords
 						add_pot(cx,cy,pot_point,n_point);
 					}
 				}
@@ -235,26 +238,26 @@ class Maps{
 			int step=3;
 			int i=1;
 			std::vector<int> vec(2,0);
-			
+			//move nodes to local minima
 			while(flag==0){
 				flag=1;
 				for(cx=0;cx<int(max_x*100+1);cx+=1){
 					for(cy=0;cy<int(max_y*100+1);cy+=1){
 						if(pointmap[cx][cy]>0 && pointmap[cx][cy]<=i){
 							pointmap[cx][cy]=0;
-							remove_pot(cx,cy,pot_point,n_point);
+							remove_pot(cx,cy,pot_point,n_point);//do the analysis of local minima for a node without his potential values
 							
 							fx=cx;
 							fy=cy;
-							ROS_INFO("old pos: %d,%d",fx,fy);
-							vec=next_place(fx,fy,step);
+							//ROS_INFO("old pos: %d,%d",fx,fy);
+							vec=next_place(fx,fy,step); //find the local minima
 							fx=vec[0];
 							fy=vec[1];
-							ROS_INFO("returned: %d,%d",fx,fy);
-							if((fx!=cx) || (fy!=cy)){
+							//ROS_INFO("returned: %d,%d",fx,fy);
+							if((fx!=cx) || (fy!=cy)){//if one node changed iterate everything again
 								flag=0;
 							}
-							add_pot(fx,fy,pot_point,n_point);
+							add_pot(fx,fy,pot_point,n_point);//add the potential values again
 							pointmap[fx][fy]=i+1;
 						}
 					}
@@ -262,6 +265,7 @@ class Maps{
 				i+=1;
 				ROS_INFO("Iteration: %d",i);
 			}
+			//Write the nodes in the map matrix
 			for (i=0;i<int(max_x*100+1);i+=1){
 				for(int j=0;j<int(max_y*100+1);j+=1){
 					if(pointmap[i][j]>0){
@@ -329,12 +333,12 @@ class Maps{
 			float a,b;
 			int calc;
 			
-				
+			//place nodes in the graph	
 			for(cx=0;cx<int(max_x*100+1);cx+=1){
 				for(cy=0;cy<int(max_y*100+1);cy+=1){
 					if(map[cx][cy]==2){
 						graph.emplace_back(cx, cy);
-						map[cx][cy]=node;
+						map[cx][cy]=node;//numerate the nodes
 						node+=1;
 					}
 				}
@@ -343,14 +347,20 @@ class Maps{
 			
 			for(cx=0;cx<int(max_x*100+1);cx+=1){
 				for(cy=0;cy<int(max_y*100+1);cy+=1){
-					if(map[cx][cy]>2){
+					
+					if(map[cx][cy]>2){//if the point being analysed its a node, fully analyse its connections
+						
 						node=map[cx][cy];
 						for(i=0;i<int(max_x*100+1);i+=1){
 							for(j=0;j<int(max_y*100+1);j+=1){
-								if(map[i][j]>node){
+								
+								if(map[i][j]>node){//if the point is a node with its connections not fully analysed
 									mx=abs(i-cx);
 									my=abs(j-cy);
 									wall_flag=0;
+									//do a line a analysis as before (when reading the map for diagonal lines), 
+									//but this time verify also "square" number of points on each side of the line to guarantee
+									//that there are no walls in the way
 									if (mx>=my){
 										a=(((float) cy)-((float) j))/(((float) cx)-((float) i));
 										b=((float) j)-(a*((float) i));
@@ -422,10 +432,11 @@ class Maps{
 										}
 										
 									}
-									
+									//if there are no walls connect, note that the node number started with 3 and not zero,
+									//thats way we need to take 3 of the number
 									if(wall_flag==0){
-										ROS_INFO("connected: %d : %d",(map[cx][cy]-3),(map[i][j]-3));
-										ROS_INFO("connected: %d %d : %d %d",cx,cy,i,j);
+										//ROS_INFO("connected: %d : %d",(map[cx][cy]-3),(map[i][j]-3));
+										//ROS_INFO("connected: %d %d : %d %d",cx,cy,i,j);
 										 m.connect((map[cx][cy]-3),(map[i][j]-3));
 									}
 								}
@@ -448,7 +459,8 @@ class Maps{
 		int num_points;
 		dijkstra::map m;
 		std::vector<dijkstra::point> graph;
-				
+		
+		//Add potential values to the pot_map
 		void add_pot(int cx, int cy,std::vector< std::vector<long int> > pot,int n){
 			int i,j;
 			pot_map[cx][cy]+=pot[((n-1)/2)][((n-1)/2)];
@@ -470,7 +482,7 @@ class Maps{
 				}
 			}
 		}
-		
+		//Remove potential values of the pot_map
 		void remove_pot(int cx, int cy,std::vector< std::vector<long int> > pot,int n){
 			int i,j;
 			pot_map[cx][cy]-=pot[((n-1)/2)][((n-1)/2)];
@@ -492,7 +504,7 @@ class Maps{
 				}
 			}
 		}
-		
+		//Search for the local minima in the given coords, and considering a max movement per call of "step"
 		std::vector<int> next_place(int fx, int fy, int step){
 			int i,j;
 			int min_val=-1;
@@ -529,7 +541,6 @@ int main(int argc, char** argv)
     ros::NodeHandle n;
 	
 	Maps run;
-	ROS_INFO("OLA");
 	
 	run.move_points();
 	
