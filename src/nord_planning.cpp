@@ -3,7 +3,7 @@
 #include <fstream>
 #include <sstream>
 #include <string>
-#include "map.hpp"
+#include "dijkstra/map.hpp"
 #include <math.h>  
 
 class Maps{
@@ -73,7 +73,6 @@ class Maps{
 				max_y = std::max({max_y, y0, y1});
 			}
 			
-			std::cout<<max_x<<' '<<max_y<<'\n';
 			file.close();
 			file.open(filename);
 
@@ -262,8 +261,9 @@ class Maps{
 						}
 					}
 				}
-				i+=1;
+				
 				ROS_INFO("Iteration: %d",i);
+				i+=1;
 			}
 			//Write the nodes in the map matrix
 			for (i=0;i<int(max_x*100+1);i+=1){
