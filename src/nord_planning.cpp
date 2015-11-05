@@ -12,7 +12,6 @@ int main(int argc, char** argv)
 	graph::Maps run;
 	
 	run.move_points();
-	
 	run.create_graph();
 	run.print_info();
     return 0;
