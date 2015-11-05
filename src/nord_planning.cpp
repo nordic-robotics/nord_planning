@@ -3,6 +3,7 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+#include "graph/graph.hpp"
 
 int main(int argc, char** argv)
 {
