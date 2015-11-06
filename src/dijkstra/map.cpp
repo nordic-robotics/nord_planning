@@ -6,6 +6,7 @@ namespace dijkstra
     class priority_compare
     {
     public:
+        // sorts first on distance then on memory address (arbitrary)
         bool operator()(const std::pair<point const*, float>& a,
                         const std::pair<point const*, float>& b)
         {

@@ -10,6 +10,7 @@
 namespace std {
     template <> struct hash<std::pair<dijkstra::point const*, dijkstra::point const*>>
     {
+        // hashes a pair of point*s, to allow having them in an unordered_map
         size_t operator()(const std::pair<dijkstra::point const*,
                                           dijkstra::point const*>& var) const
         {
