@@ -40,7 +40,7 @@ namespace graph
 		}
 		
 
-		map=read_map(ros::package::getPath("nord_planning") + "/data/maze1.txt");
+		map=read_map(ros::package::getPath("nord_planning") + "/data/small_maze.txt");
 		
 		create_pointmap();
 		
@@ -318,7 +318,7 @@ namespace graph
 	void Maps::create_graph(){
 		int cx,cy;
 		int node=3;
-		int square=10;//half the size of the side of the square that goes through the line and sees if there is any wall near that path
+		int square=14;//half the size of the side of the square that goes through the line and sees if there is any wall near that path
 		int i,j;
 		int wall_flag;
 		int fx,fy;
