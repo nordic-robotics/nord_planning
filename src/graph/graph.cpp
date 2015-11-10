@@ -330,7 +330,7 @@ namespace graph
 		for(cx=0;cx<int(max_x*100+1);cx+=1){
 			for(cy=0;cy<int(max_y*100+1);cy+=1){
 				if(map[cx][cy]==2){
-					graph.emplace_back(cx, cy);
+					graph.emplace_back(cx/100.0f, cy/100.0f);
 					map[cx][cy]=node;//numerate the nodes
 					node+=1;
 				}
