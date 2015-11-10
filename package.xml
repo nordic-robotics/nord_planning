@@ -3,11 +3,14 @@
   <name>nord_planning</name>
   <version>0.0.1</version>
   <description>The nord_planning package</description>
-
+  
+  <author email="gpcp@kth.se">Goncalo Collares Pereira</author>
+  
   <maintainer email="bened@kth.se">Magnus Thor Benediktsson</maintainer>
-  <maintainer email="gsands@kth.se">Gustav Sandström</maintainer>
+  <maintainer email="gsands@kth.se">Gustav Sandstrom</maintainer>
   <maintainer email="tolundi@kth.se">Tobias Lundin</maintainer>
-  <maintainer email="lucasas@kth.se">Lucas Åström</maintainer>
+  <maintainer email="lucasas@kth.se">Lucas Astrom</maintainer>
+  <maintainer email="gpcp@kth.se">Goncalo Collares Pereira</maintainer>
 
   <license>MIT</license>
 
@@ -18,9 +21,15 @@
   <buildtool_depend>catkin</buildtool_depend>
   <build_depend>roscpp</build_depend>
   <build_depend>std_msgs</build_depend>
+  <build_depend>sensor_msgs</build_depend>
+  <build_depend>roslib</build_depend>
+  <build_depend>ras_arduino_msgs</build_depend>
   <run_depend>roscpp</run_depend>
   <run_depend>std_msgs</run_depend>
+  <run_depend>sensor_msgs</run_depend>
   <run_depend>message_runtime</run_depend>
+  <run_depend>roslib</run_depend>
+  <run_depend>ras_arduino_msgs</run_depend>
 
 
   <export>
