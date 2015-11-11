@@ -37,9 +37,10 @@ class ConeOfSight{
     //important to note 0 rad means it travels along the x_axis
     // All positions will be in cm not meters;
     private:
-    	double cone_angle;
-    	int x_current; int y_current; double start_direction;
+    	double cone_angle; 
+    	int current_x; int current_y; double start_direction;
     	int x_next; int y_next; double next_direction;
         int corners_found; int wall_found;
+        std::vector<vector<float>> expored;
 
 };
