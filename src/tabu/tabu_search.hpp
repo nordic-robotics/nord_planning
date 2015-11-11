@@ -7,6 +7,7 @@
 #include <functional>
 #include <algorithm>
  
+ //y = 20 -(20-x)² find y_max
 namespace tabu
 {
     // attempts to maximize fitness(T) while exploring greedily
@@ -17,7 +18,7 @@ namespace tabu
              int max_attempts,
              int short_memory_size,
              std::function<float(T)> fitness,
-             std::function<T()> random,
+             std::function<T()> random, //returns a random path
              std::function<std::vector<T>(T)> neighbours)
     {
         std::deque<T> short_memory(short_memory_size, random());
