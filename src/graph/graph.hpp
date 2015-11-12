@@ -19,7 +19,7 @@ namespace graph
 		void create_pot_map();
 		void move_points();
 		void print_info();
-		void create_graph();
+		dijkstra::map * create_graph();
 	private:
 		float min_x, min_y, max_x, max_y;
 		std::vector< std::vector<long int> > pot_wall; std::vector< std::vector<long int> > pot_point; 

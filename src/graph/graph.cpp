@@ -315,7 +315,7 @@ namespace graph
 		}
 	}
 	
-	void Maps::create_graph(){
+	dijkstra::map * Maps::create_graph(){
 		int cx,cy;
 		int node=3;
 		int square=14;//half the size of the side of the square that goes through the line and sees if there is any wall near that path
@@ -439,7 +439,7 @@ namespace graph
 				}
 			}
 		}
-
+		return &m;
 	}
 
 
