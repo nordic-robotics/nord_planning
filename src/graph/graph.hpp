@@ -7,6 +7,7 @@
 #include <string>
 #include "../dijkstra/map.hpp"
 #include <math.h> 
+#include "nord_messages/Graph.h"
 
 namespace graph
 {
@@ -19,7 +20,7 @@ namespace graph
 		void create_pot_map();
 		void move_points();
 		void print_info();
-		void create_graph();
+		void create_graph(ros::NodeHandle n);
 	private:
 		float min_x, min_y, max_x, max_y;
 		std::vector< std::vector<long int> > pot_wall; std::vector< std::vector<long int> > pot_point; 

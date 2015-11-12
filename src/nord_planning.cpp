@@ -13,7 +13,8 @@ int main(int argc, char** argv)
 	graph::Maps run;
 	
 	run.move_points();
-	run.create_graph();
+	//create graph receives the ros::NodeHandle because at the end it needs to publish the graph....
+	run.create_graph(n);
 	run.print_info();
     return 0;
 }
