@@ -315,7 +315,7 @@ namespace graph
 		}
 	}
 	
-	void Maps::create_graph(ros::NodeHandle n){
+	void Maps::create_graph(){
 		int cx,cy;
 		int node=3;
 		int square=14;//half the size of the side of the square that goes through the line and sees if there is any wall near that path
@@ -325,10 +325,6 @@ namespace graph
 		int mx,my;
 		float a,b;
 		int calc;
-		
-		ros::Publisher dmap_pub;
-		dmap_pub = n.advertise<nord_messages::DijkstraMap>("/nord/motor_planning/DijkstraMap", 1);
-		nord_messages::DijkstraMap dmap;
 		
 		//place nodes in the graph	
 		for(cx=0;cx<int(max_x*100+1);cx+=1){
@@ -443,8 +439,6 @@ namespace graph
 				}
 			}
 		}
-		dmap.m=m;
-		dmap_pub.publish(dmap);
 
 	}
 
