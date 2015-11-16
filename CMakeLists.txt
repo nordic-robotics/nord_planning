@@ -8,6 +8,8 @@ find_package(catkin REQUIRED COMPONENTS
   roslib
 )
 
+catkin_package(CATKIN_DEPENDS message_runtime)
+
 include_directories(
   ${catkin_INCLUDE_DIRS}
 )
