@@ -34,16 +34,20 @@ map read_map(std::string filename)
 
 
 // ska jag spara node connections i std::vector<std::vector<std::vector<int>>> för positionen x å y 
-// std::vector<std::vector<std::vector<int>>> read_nodes(std:filename, int x_max, int y_max){
-//     std::ifstream file(filename);
-//     std::string l;
-//     std::vector<std::vector<std::vector<int>>>(x_max, std::vector<std::vector<int>>(y_max), std::vector<int>(1)) node_connection;
-//     while(std::getline(filename)){
-//         std::istringstream iss(l);
-        
-//     }
+std::vector<std::vector<std::vector<int>>> read_nodes(std::string filename, int x_max, int y_max){
+    std::ifstream file(filename);
+    std::string l;
+    std::vector<std::vector<std::vector<int>>> node_connections = std::vector<std::vector<std::vector<int>>>(x_max, std::vector<std::vector<int>>(y_max, std::vector<int>(0)));
 
-// }
+    // while(std::getline(file,l)){
+    //     std::istringstream iss(l);
+    //     if(l[0] = '%'){
+
+    //     }
+        
+    // }
+    return node_connections;
+}
 
 // map read_map(std::string filename)
 // {
@@ -102,37 +106,37 @@ visualization_msgs::Marker create_map_message(const map& maze)
 // }
 
 visualization_msgs::Marker cone_of_sight(const ConeOfSight& seeing){
-    
+    ROS_INFO("inne i konen");
     visualization_msgs::Marker cone;
     cone.header.frame_id ="cone_of_sight";
     cone.id=1;
-    cone.header.frame_id = "/map";
+    cone.header.frame_id = "/cone";
     cone.ns="cone";
     cone.header.stamp = ros::Time::now();
     cone.type = visualization_msgs::Marker::CUBE_LIST;   
     cone.pose.orientation.w = 1.0f;
     cone.scale.x = 0.01f;
     cone.scale.y = 0.01f;
-    cone.scale.z = 0;
-    cone.color.r = 1.0f;//centroid(3);
-    cone.color.g = 0;//centroid(4);
-    cone.color.b = 0;//centroid(5);
+    cone.scale.z = 0.01f;
+    cone.color.r = 1.0f;
+    cone.color.g = 1.0f;
+    cone.color.b = 0;
     cone.color.a = 1.0f;
-    cone.lifetime = ros::Duration();
     cone.action = visualization_msgs::Marker::ADD;
     std::vector<std::vector<int>> cone_matrix = seeing.getCone();
-
+    // ROS_INFO("seeing.getMaxX() = %d",seeing.getMaxX());
+    // ROS_INFO("seeing.getMaxY() = %d",seeing.getMaxY());
     for (int i = 0; i < seeing.getMaxX(); ++i)
     {
-
         geometry_msgs::Point pos;
-        for(int j = 0; i < seeing.getMaxY(); ++i){
-
+        for(int j = 0; j < seeing.getMaxY(); ++j){
+            // ROS_INFO("cone_matrix[i][j] = %d",cone_matrix[i][j]);
             if(cone_matrix[i][j] == 1){
                 
                 pos.x = i;
                 pos.y = j;
-                pos.z  = 0;
+                pos.z = 0.0;
+                ROS_INFO("pos.x = %f pos.y = %f",pos.x*0.01,pos.y*0.01);
                 cone.points.push_back(pos);
             }
         }
@@ -146,27 +150,27 @@ int main(int argc, char** argv)
 {
 	//for plotting the map
     std::cout << "main 0" << std::endl;
-    return 0;
 	ros::init(argc, argv, "initial_path");
 	ros::NodeHandle n;
 	map maze = read_map(ros::package::getPath("nord_planning") + "/data/small_maze.txt");
 	auto map_msg = create_map_message(maze);
 	auto map_pub = n.advertise<visualization_msgs::Marker>("/nord/map", 1);
-    ROS_INFO("main 1");
+    // ROS_INFO("main 1");
     //my shit begins!!!!
     ConeOfSight sight(maze);
     sight.createCone();
     auto cone_msg = cone_of_sight(sight);
     auto cone_pub = n.advertise<visualization_msgs::Marker>("/nord/cone_of_sight",1);
-    ROS_INFO("main 2");
+    // ROS_INFO("main 2");
     
 	auto map_timer = n.createTimer(ros::Duration(1), [&](const ros::TimerEvent& e) {
         map_pub.publish(map_msg);
         cone_pub.publish(cone_msg);
+        ROS_INFO("Wooop wooop");
     });
 
 
-    ROS_INFO("main 3");
+    // ROS_INFO("main 3");
 
     
     // int max_attempts = 100;

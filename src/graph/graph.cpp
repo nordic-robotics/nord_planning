@@ -306,8 +306,9 @@ namespace graph
 		
 		
 		for (auto& node : m.get_graph())
-		{
-			file3<< node.x <<' '<< node.y <<"\n\t";
+		{	
+			file3 << "----" << "\n";
+			file3<< node.x <<' '<< node.y <<"\n";
 			for (auto link : node.get_links()){
 				file3<<"\t"<<link->x<<' '<<link->y<<"\n\t";
 			}

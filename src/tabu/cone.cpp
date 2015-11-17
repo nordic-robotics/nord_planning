@@ -10,7 +10,6 @@ ConeOfSight::ConeOfSight(const map& maze){
 	explored = std::vector<std::vector<float>>(x_max, std::vector<float>(y_max));
 	current_x = 79;
 	current_y = 20;
-	first_time = true;
 }
 
 
@@ -139,14 +138,8 @@ void ConeOfSight::createCone(){
 	int x = current_x + 80;
 	int y = current_y + 0;
 
-	//makes sure it handles different angles after first call
-	if(first_time == true){
-		first_time = false;
-	}
-	else{
-		x = current_x + floor(x*cos(start_direction) - y*sin(start_direction));
-		y = current_y + floor(x*sin(start_direction) + y*cos(start_direction));
-	}
+
+
 
 
 	//Calculating all the end points of the cone
@@ -156,10 +149,12 @@ void ConeOfSight::createCone(){
 
 	//rotating accordingly with starting pos
 	int right_x  = current_x + floor(x*cos(right_angle) - y*sin(right_angle));
-	int right_y  = current_y + floor(x*sin(right_angle) + y*cos(right_angle));
+	int right_y  = current_y + floor(x*sin(left_angle) + y*cos(left_angle));
+	ROS_INFO("right_x = %d  right_y = %d", right_x, right_y);
+
 	int left_x   = current_x + floor(x*cos(left_angle) - y*sin(left_angle));
 	int left_y   = current_y + floor(x*sin(left_angle) + y*cos(left_angle));
-
+	ROS_INFO("left_x = %d  left_y = %d", left_x, left_y);
 	
 	int x_min = determineSmallest(current_x, right_x, left_x);
     int y_min = determineSmallest(current_y, right_y, left_y);
@@ -172,18 +167,20 @@ void ConeOfSight::createCone(){
     double acceptable_error = 0.01; 
     //basically checking if particles in a square twice the size the size of 
     //
-    for(int temp_y = y_min; temp_y <= y_max; temp_y++){
-    	for(int temp_x = x_min; temp_x <= x_max; temp_x++){
+    
+	for(int temp_x = x_min; temp_x <= x_max; temp_x++){
+		for(int temp_y= y_min; temp_y <= y_max; temp_y++){
     		A1 = triangleArea(temp_x, temp_y, right_x, right_y, left_x, left_y);
     		A2 = triangleArea(current_x, current_y, temp_x, temp_y, left_x, left_y);
     		A3 = triangleArea(current_x, current_y, right_x, right_y, temp_x, temp_y);
     		//checking if coordinate is within triangle
-    		if(abs(A-(A1 + A2 + A3)) <= acceptable_error){
+    		if(abs(A)-abs(A1 + A2 + A3) <= acceptable_error){
     			//if not explored, say it is explored
-    			if(explored[current_x][current_y] != 0){
-    				explored[current_x][current_y] = 1;
+    			if(explored[temp_x][temp_y] != 1){
+    				explored[temp_x][temp_y] = 1;
     			}
-    			cone_matrix[current_x][current_y] = 1; // we are seeing this 
+    			// ROS_INFO("temp_x = %d, temp_y = %d", temp_x, temp_y);
+    			cone_matrix[temp_x][temp_y] = 1; // we are seeing this 
     		}
     	} 
 	}
