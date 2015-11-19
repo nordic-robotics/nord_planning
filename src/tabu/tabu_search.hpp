@@ -7,19 +7,18 @@
 #include <functional>
 #include <algorithm>
  
- //y = 20 -(20-x)² find y_max
 namespace tabu
 {
     // attempts to maximize fitness(T) while exploring greedily
     // but also keeping a short memory to (hopefully) avoid
     // local maxima
-    template<class T>
+    template<class T, class FitnessFunc, class RandomFunc, class NeighboursFunc>
     std::pair<float, T> search(
              int max_attempts,
              int short_memory_size,
-             std::function<float(T)> fitness,
-             std::function<T()> random, //returns a random path
-             std::function<std::vector<T>(T)> neighbours)
+             FitnessFunc fitness,
+             RandomFunc random,
+             NeighboursFunc neighbours)
     {
         std::deque<T> short_memory(short_memory_size, random());
         T current = short_memory.front();
