@@ -307,12 +307,12 @@ namespace graph
 		
 		for (auto& node : m.get_graph())
 		{	
-			file3 << "----" << "\n";
-			file3<< node.x <<' '<< node.y <<"\n";
+			file3 << "%" << "\n";
+			file3<< node.x <<','<< node.y;
 			for (auto link : node.get_links()){
-				file3<<"\t"<<link->x<<' '<<link->y<<"\n\t";
+				file3<<"\n\t"<<link->x<<','<<link->y;
 			}
-			file3<<"\n\n\n";
+			file3<<"\n";
 		}
 	}
 	
