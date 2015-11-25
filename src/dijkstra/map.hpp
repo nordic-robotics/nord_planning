@@ -31,7 +31,7 @@ namespace dijkstra
         void connect(unsigned int a, unsigned int b);
         void precompute(const std::vector<point>& points);
 
-	const std::vector<point>& get_graph() const ;
+        const std::vector<point>& get_graph() const;
 
         path& find(const point& start_approx, const point& goal_approx);
 

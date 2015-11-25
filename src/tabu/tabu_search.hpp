@@ -52,7 +52,10 @@ namespace tabu
 
             // a maximum element will always exist because possibles isn't empty,
             // so we can dereference right away
-            auto challenger = *std::max_element(scores.begin(), scores.end());
+            auto challenger = *std::max_element(scores.begin(), scores.end(),
+                [&](const std::pair<float, T> a, std::pair<float, T> b) {
+                    return a.first < b.first;
+                });
 
             short_memory.pop_back();
             short_memory.push_front(challenger.second);
