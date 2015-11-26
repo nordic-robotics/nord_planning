@@ -15,7 +15,7 @@ include_directories(
 )
 
 add_executable(nord_planning src/nord_planning.cpp src/graph/graph.cpp src/dijkstra/map.cpp src/dijkstra/point.cpp src/dijkstra/path.cpp)
-add_executable(initial_path src/tabu/initial_path.cpp src/tabu/map.cpp src/tabu/cone.cpp)
+add_executable(initial_path src/tabu/initial_path.cpp src/tabu/map.cpp src/tabu/cone.cpp src/dijkstra/map.cpp src/dijkstra/point.cpp src/dijkstra/path)
 
 add_dependencies(nord_planning ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(initial_path ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})

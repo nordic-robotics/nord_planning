@@ -6,7 +6,7 @@
 #include <utility>
 #include <functional>
 #include <algorithm>
- 
+#include "cone.hpp" 
 namespace tabu
 {
     // attempts to maximize fitness(T) while exploring greedily
@@ -52,12 +52,15 @@ namespace tabu
 
             // a maximum element will always exist because possibles isn't empty,
             // so we can dereference right away
-            auto challenger = *std::max_element(scores.begin(), scores.end());
+            auto challenger = *std::max_element(scores.begin(), scores.end(),
+                [&](const std::pair<float, T>& a, const std::pair<float, T>& b){
+                    return a.first < b.first;
+                });
 
             short_memory.pop_back();
             short_memory.push_front(challenger.second);
 
-            best = std::max(best, challenger);
+            best = challenger.first > best.first ? challenger : best;
 
             current = challenger.second;
         }
