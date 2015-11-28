@@ -1,7 +1,8 @@
 #include "cone.hpp"
 
 //from here ill get start position and link to all nodes
-ConeOfSight::ConeOfSight(map* maze,int start_x,int start_y){
+ConeOfSight::ConeOfSight(map* maze,int start_x,int start_y, std::vector<std::vector<int>> walls)
+	: walls(walls){
 
 	cone_angle = M_PI/6.0; //30 deg
 	current_direction = 0;
@@ -32,7 +33,8 @@ ConeOfSight::ConeOfSight(ConeOfSight const& cone){
 	cone_matrix = cone.cone_matrix;
 	point_cap = cone.point_cap;
 	largest_x = cone.largest_x; largest_y = cone.largest_y;
-	this->maze = maze;
+	this->maze = cone.maze;
+	walls = cone.walls;
 	// std::cout << "no problem" << std::endl;
 }
 
@@ -236,7 +238,9 @@ void ConeOfSight::moveCone(int new_x, int new_y){
 	// std::cout << "move complete" << std::endl;	 
 }
 
-
+void ConeOfSight::createCone(){
+	
+}
 
 
 void ConeOfSight::createCone(){
@@ -294,9 +298,13 @@ void ConeOfSight::createCone(){
     double acceptable_error = 1; 
     //basically checking if particles in a square twice the size the size of 
     //
+
+    point<2> start(current_x/100.0,current_y/100.0);
     
+
+
 	for(int temp_x = x_min; temp_x < x_max; ++temp_x){
-	 	// std::cout << "x = " << temp_x << std::endl;
+
 		for(int temp_y= y_min; temp_y < y_max; ++temp_y){
 		 	// std::cout << "y = " << temp_y << std::endl;
     		A1 = triangleArea(temp_x, temp_y, right_x, right_y, left_x, left_y);
@@ -304,19 +312,20 @@ void ConeOfSight::createCone(){
     		A3 = triangleArea(current_x, current_y, right_x, right_y, temp_x, temp_y);
     		//checking if coordinate is within triangle
 
-    		// double test = std::fabs(A-(A1 + A2 + A3));
-    		// std::cout << " 0.1 >= " << std::fabs(A-(A1 + A2 + A3)) << std::endl;
-    		// std::cout << " 0.1 >= (test) " << test << std::endl;
     		if(std::fabs(A-(A1 + A2 + A3)) <= acceptable_error){
-    			//if not explored, say it is explored
-    			if(!(explored[temp_x][temp_y] == 1)){
-    				explored[temp_x][temp_y] = 1;
+	    		point<2> end(temp_x/100.0,temp_y/100.0);
+    			line<2> line(start,end);
+    			auto wall_collition = maze->raycast(line);
+    			if(!(wall_collition)){ 
+    				if(!(explored[temp_x][temp_y] == 1)){ 
+    					explored[temp_x][temp_y] = 1; 
+    				}	   				
+    				// else{
+    				// 	explored[temp_x][temp_y] = -0.01;
+    				// }
+    				cone_matrix[temp_x][temp_y] = 1; // we are seeing this
     			}
-
-    			// ROS_INFO("temp_x = %d, temp_y = %d", temp_x, temp_y);
-    			// std::cout << temp_x << " " << temp_y<< std::endl;
-    			cone_matrix[temp_x][temp_y] = 1; // we are seeing this 
-    		}
+    		}	
     	} 
 	}
 	//std::cout << "cone created" << std::endl;

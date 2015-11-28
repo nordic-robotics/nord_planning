@@ -6,6 +6,7 @@
 #include <sstream>
 #include <string>
 #include <stdlib.h>
+#include <stdio.h>
 #include "map.hpp"
 #include "geometry_msgs/Pose2D.h"
 #include "line.hpp"
@@ -15,6 +16,8 @@
 #include "../dijkstra/path.hpp"      
 #include "../dijkstra/map.hpp" 
 #include "../dijkstra/point.hpp"
+#include "line.hpp"
+#include <unordered_map>
 
 struct Position{
     public:
@@ -38,7 +41,7 @@ class ConeOfSight{
     public:
         
         bool point_cap;
-        ConeOfSight(map* maze,int start_x, int start_y);
+        ConeOfSight(map* maze,int start_x, int start_y, std::vector<std::vector<int>> walls);
         ConeOfSight(ConeOfSight const& cone);
 
         void changeWidth(float new_width);
@@ -60,7 +63,7 @@ class ConeOfSight{
         const int& get_y_max()const{return largest_y;};
         // const Position& get_end_pos()const{return end_position}
 
-
+        void pre_compute();
 
         bool operator==(const ConeOfSight& other)const{return path == other.get_path();}
 
@@ -77,6 +80,7 @@ class ConeOfSight{
         int largest_x; int largest_y;
         std::vector<Position> path;
         std::vector<std::vector<int>> cone_matrix;
+        std::vector<std::vector<int>> walls;
         std::vector<std::vector<float>> explored;
         int corners_found = 0; int wall_found = 0;
         double time_moving; double time_rotating;

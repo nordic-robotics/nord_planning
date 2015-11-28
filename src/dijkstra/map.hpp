@@ -27,7 +27,8 @@ namespace dijkstra
         map() { };
         map(std::vector<point>&& graph) : graph(graph) { };
         map(const std::vector<point>& graph) : graph(graph) { };
-
+        map(const map& other) = delete;
+        
         void connect(unsigned int a, unsigned int b);
         void precompute(const std::vector<point>& points);
 
