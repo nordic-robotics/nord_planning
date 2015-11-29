@@ -14,8 +14,8 @@ namespace tabu
     // local maxima
     template<class T, class FitnessFunc, class RandomFunc, class NeighboursFunc>
     std::pair<float, T> search(
-             int max_attempts,
-             int short_memory_size,
+             unsigned int max_attempts,
+             unsigned int short_memory_size,
              FitnessFunc fitness,
              RandomFunc random,
              NeighboursFunc neighbours)
@@ -23,7 +23,7 @@ namespace tabu
         std::deque<T> short_memory(short_memory_size, random());
         T current = short_memory.front();
         auto best = std::make_pair(fitness(current), current);
-        for (int i = 0; i < max_attempts; i++)
+        for (unsigned int i = 0; i < max_attempts; i++)
         {
             auto possibles = neighbours(current);
 

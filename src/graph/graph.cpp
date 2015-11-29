@@ -307,6 +307,11 @@ namespace graph
 		
 		for (auto& node : m.get_graph())
 		{	
+			/* gonca version
+			for (auto link : node.get_links()){
+				file3<< node.x <<','<< node.y<<",";
+				file3<<link->x<<','<<link->y<<std::endl;
+			}*/
 			file3 << "%" << "\n";
 			file3<< node.x <<','<< node.y;
 			for (auto link : node.get_links()){

@@ -1,7 +1,7 @@
 #include "path_helper.hpp"
 
 PathHelper::PathHelper(int x_max, int y_max){
-	explored = std::vector<std::vector<float>>(x_max, std::vector<float>y_max);
+	explored = std::valarray<bool>(false, x_max * y_max);
 	path.clear();
 }
 

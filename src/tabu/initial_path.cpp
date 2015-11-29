@@ -19,7 +19,7 @@ class InitialPath{
         visualization_msgs::Marker map_msg;
         visualization_msgs::Marker node_msg; 
 
-        InitialPath(std::vector<std::vector<std::vector<Position>>>  nodes, map* maze, int x, int y, dijkstra::map& dijkstra_search, std::vector<std::vector<int>> walls)
+        InitialPath(std::vector<std::vector<std::vector<Position>>>  nodes, map* maze, int x, int y, dijkstra::map& dijkstra_search, std::valarray<bool> walls)
             : dijkstra_search(dijkstra_search), walls(walls) {
             node_links = nodes;
             this->maze = maze;
@@ -36,7 +36,6 @@ class InitialPath{
 
         end_position.x = start_x;
         end_position.y = start_y;
-        srand(time(NULL));
         int connections; 
         int random_nr; 
         Position pos;
@@ -229,7 +228,7 @@ class InitialPath{
         
         for(int i = 0; i < the_path.get_x_max(); ++i){
             for(int j = 0; j < the_path.get_y_max();++j){
-                if(the_path.getExplored()[i][j] ==1){
+                if(the_path.getExplored()[i + j * the_path.get_x_max()]){
                     score+= coolness;
                 }
             }
@@ -279,7 +278,7 @@ class InitialPath{
     //
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////    
 
-    visualization_msgs::Marker explored_message(const std::vector<std::vector<float>>& explored_matrix,
+    visualization_msgs::Marker explored_message(const std::valarray<bool>& explored_matrix,
         const int& x_max, const int& y_max){
 
         visualization_msgs::Marker explored;
@@ -301,7 +300,7 @@ class InitialPath{
         {
             for(int j = 0; j < y_max; ++j){
                 // ROS_INFO("cone_matrix[i][j] = %d",cone_matrix[i][j]);
-                if(explored_matrix[i][j] == 1){
+                if(explored_matrix[i + j * x_max]){
                     geometry_msgs::Point pos;
                     pos.x = i/100.0;
                     pos.y = j/100.0;
@@ -319,7 +318,7 @@ class InitialPath{
     //
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    visualization_msgs::Marker cone_of_sight_message(const std::vector<std::vector<int>>& cone_matrix,
+    visualization_msgs::Marker cone_of_sight_message(const std::valarray<bool>& cone_matrix,
         const int x_max, const int y_max){
 
         visualization_msgs::Marker cone;
@@ -345,7 +344,7 @@ class InitialPath{
             geometry_msgs::Point pos;
             for(int j = 0; j < y_max; ++j){
                 // ROS_INFO("cone_matrix[i][j] = %d",cone_matrix[i][j]);
-                if(cone_matrix[i][j] == 1){
+                if(cone_matrix[i + j * x_max]){
                     
                     pos.x = i/100.0;
                     pos.y = j/100.0;
@@ -439,7 +438,7 @@ class InitialPath{
         std::vector<std::vector<std::vector<Position>>> node_links;
         int start_x; int start_y;
         Position end_position;
-        std::vector<std::vector<int>> walls;
+        std::valarray<bool> walls;
         dijkstra::map& dijkstra_search;
 };
 
@@ -473,10 +472,10 @@ map read_map(std::string filename)
     return map(walls, min_x, min_y, max_x, max_y);
 }
 
-std::vector<std::vector<int>> read_walls(std::string filename, int rows, int columns){
+std::valarray<bool> read_walls(std::string filename, int rows, int columns){
     std::ifstream file(filename);
     std::string l;
-    std::vector<std::vector<int>> walls = std::vector<std::vector<int>>(rows+1 , std::vector<int>(columns +1));
+    std::valarray<bool> walls((rows + 1) * (columns + 1));
     int row = 0;
     int value = 0;
 
@@ -485,7 +484,7 @@ std::vector<std::vector<int>> read_walls(std::string filename, int rows, int col
         int col = 0;
         while(line >> value){
             // std::cout << "col = " << col << std::endl;  
-            walls[row][col] = value;
+            walls[col + row * columns] = value;
             col++;
         }
         // std::cout << "row = " << row << std::endl;
@@ -619,14 +618,15 @@ void load_graph(std::string filename, dijkstra::map& graph)
 int main(int argc, char** argv)
 {
 
+    srand(time(NULL));
 	ros::init(argc, argv, "initial_path");
 	map maze = read_map(ros::package::getPath("nord_planning") + "/data/small_maze.txt");
     std::vector<std::vector<std::vector<Position>>> node_vector = read_nodes(ros::package::getPath("nord_planning") + "/links.txt", maze.get_max_x(), maze.get_max_y());
-    std::vector<std::vector<int>> walls = read_walls(ros::package::getPath("nord_planning") + "/Map.txt",maze.get_max_x()*100, maze.get_max_y()*100);
+    std::valarray<bool> walls = read_walls(ros::package::getPath("nord_planning") + "/Map.txt",maze.get_max_x()*100, maze.get_max_y()*100);
 
     dijkstra::map minimum_path;
     load_graph(ros::package::getPath("nord_planning") + "/links.txt", minimum_path);
-    InitialPath path(node_vector, &maze, 75, 25, minimum_path, walls);
+    InitialPath path(node_vector, &maze, 0, 15, minimum_path, walls);
     // auto test = path.random();
     // path.run_simulation(test);
 
@@ -641,15 +641,16 @@ int main(int argc, char** argv)
     
 
     std::cout << "starting the tabu search" << std::endl;
-    int max_attempts = 300;
-    int short_memory = 1000;   
+    int max_attempts = 120;
+    int short_memory = 200;   
 
     std::pair<float, ConeOfSight> best = tabu::search<ConeOfSight>(max_attempts, short_memory, [&](ConeOfSight& c) { return path.fitness(c); },
         [&]() { return path.random(); }, [&](ConeOfSight v) {return path.neighbours(v);});
     std::cout << "Done with the search" <<  std::endl;
     std::cout << "Winning score is = " << best.first << std::endl;
     std::cout << "Winning alternatieve found back = " << best.second.point_cap << std::endl;
-    std::cout << "The time it took was = " << best.second.get_time() << " following was max = " << 60*5 << std::endl;  
+    std::cout << "The time it took was = " << best.second.get_time() << " following was max = " << 60*5 << std::endl;
+    //exit(1);
     unsigned int path_size = best.second.get_path().size();
     for(unsigned int i = 0; i < path_size ; ++i){
         std::cout << best.second.get_path()[i].x << ", " << best.second.get_path()[i].y << std:: endl;

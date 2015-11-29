@@ -1,7 +1,11 @@
 #include "cone.hpp"
 
+size_t ConeOfSight::to1D(size_t x, size_t y) const {
+	return x + y * largest_x;
+}
+
 //from here ill get start position and link to all nodes
-ConeOfSight::ConeOfSight(map* maze,int start_x,int start_y, std::vector<std::vector<int>> walls)
+ConeOfSight::ConeOfSight(map* maze,int start_x,int start_y, std::valarray<bool> walls)
 	: walls(walls){
 
 	cone_angle = M_PI/6.0; //30 deg
@@ -11,7 +15,7 @@ ConeOfSight::ConeOfSight(map* maze,int start_x,int start_y, std::vector<std::vec
 	float temp_y = maze->get_max_y();
 	largest_y = temp_y*100; 	current_x = start_x;
 	largest_x = temp_x*100;	    current_y = start_y;
-	explored = std::vector<std::vector<float>>(largest_x, std::vector<float>(largest_y));
+	explored = std::valarray<bool>(false, largest_x * largest_y);
 	time_moving = 0; time_rotating = 0;
 	start_x = current_x;
 	start_y = current_y;
@@ -44,7 +48,7 @@ void ConeOfSight::add_to_path(Position pos){
 
 
 void ConeOfSight::resetExplored(){
-	explored = std::vector<std::vector<float>>(largest_x, std::vector<float>(largest_y));
+	explored = std::valarray<bool>(false, largest_x * largest_y);
 }
 
 //itteratative rotation
@@ -239,14 +243,9 @@ void ConeOfSight::moveCone(int new_x, int new_y){
 }
 
 void ConeOfSight::createCone(){
-	
-}
-
-
-void ConeOfSight::createCone(){
 
 	// will fill cones coordinates with 1s needs to be entire map
-	cone_matrix = std::vector<std::vector<int>>(largest_x,std::vector<int>(largest_y,0));
+	cone_matrix = std::valarray<bool>(false, largest_x * largest_y);
 	//cone length
 	//std::cout << "creating a cone" << std::endl;
 	int x =  80;
@@ -317,13 +316,13 @@ void ConeOfSight::createCone(){
     			line<2> line(start,end);
     			auto wall_collition = maze->raycast(line);
     			if(!(wall_collition)){ 
-    				if(!(explored[temp_x][temp_y] == 1)){ 
-    					explored[temp_x][temp_y] = 1; 
+    				if(!explored[to1D(temp_x, temp_y)]){ 
+    					explored[to1D(temp_x, temp_y)] = true; 
     				}	   				
     				// else{
     				// 	explored[temp_x][temp_y] = -0.01;
     				// }
-    				cone_matrix[temp_x][temp_y] = 1; // we are seeing this
+    				cone_matrix[to1D(temp_x, temp_y)] = true; // we are seeing this
     			}
     		}	
     	} 

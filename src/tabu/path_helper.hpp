@@ -8,11 +8,11 @@ class PathHelper(){
 		void calc_time(double rotation_t, double forward_t);
 
 		const std::vector<Position>& get_path()const{return path};
-		const std::vector<std::vector<float>>& get_explored()const {return explored};
+		const std::valarray<bool>& get_explored()const {return explored};
 		const double& get_time()const {return total_time};
 	
 	private:
-		std::vector<std::vector<float>> explored;
+		std::valarray<bool> explored;
 		double total_time;
 		
 };

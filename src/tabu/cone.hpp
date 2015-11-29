@@ -18,18 +18,17 @@
 #include "../dijkstra/point.hpp"
 #include "line.hpp"
 #include <unordered_map>
+#include <valarray>
 
 struct Position{
     public:
         int x;
         int y;
-        Position(){
-            x = -1;
-            y = -1;
+        Position()
+            : x(-1), y(-1) {
         }
-        Position (int x_start, int y_start){
-            x = x_start;
-            y = y_start;
+        Position (int x, int y)
+            : x(x), y(y) {
         }
         bool operator==(const Position& other)const{
             return(x == other.x && y == other.y);
@@ -41,7 +40,7 @@ class ConeOfSight{
     public:
         
         bool point_cap;
-        ConeOfSight(map* maze,int start_x, int start_y, std::vector<std::vector<int>> walls);
+        ConeOfSight(map* maze,int start_x, int start_y, std::valarray<bool> walls);
         ConeOfSight(ConeOfSight const& cone);
 
         void changeWidth(float new_width);
@@ -54,8 +53,8 @@ class ConeOfSight{
         double triangleArea(int x1, int y1, int x2, int y2, int x3, int y3);
         const double get_time()const{return(time_rotating+time_moving);};  
 
-        const std::vector<std::vector<int>>& getCone() const{ return cone_matrix;};
-        const std::vector<std::vector<float>>& getExplored() const{ return explored;};
+        const std::valarray<bool>& getCone() const{ return cone_matrix;};
+        const std::valarray<bool>& getExplored() const{ return explored;};
         const Position getPosition() const;
         const std::vector<Position>& get_path()const{return path;};
         // const double& get_time()const {return total_time;};
@@ -71,6 +70,8 @@ class ConeOfSight{
         int determineSmallest(int n1, int n2, int n3);
         int determineLargest(int n1, int n2, int n3);
 
+        size_t to1D(size_t x, size_t y) const;
+
     //important to note 0 rad means it travels along the x_axis
     // All positions will be in cm not meters;
     protected:
@@ -79,9 +80,9 @@ class ConeOfSight{
         int x_next; int y_next;
         int largest_x; int largest_y;
         std::vector<Position> path;
-        std::vector<std::vector<int>> cone_matrix;
-        std::vector<std::vector<int>> walls;
-        std::vector<std::vector<float>> explored;
+        std::valarray<bool> cone_matrix;
+        std::valarray<bool> walls;
+        std::valarray<bool> explored;
         int corners_found = 0; int wall_found = 0;
         double time_moving; double time_rotating;
         int start_x; int start_y;
