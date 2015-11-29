@@ -119,12 +119,18 @@ int main(int argc, char** argv)
     const float v = 0.4;
     const float w = M_PI/2;
     auto path_time = [&](const dijkstra::path& path) {
+        std::cout << "path_time" << std::endl;
         float time = 0;
         float last_rot = 0;
         for (size_t i = 0; i < path.size() - 1; i++)
         {
+            std::cout << "dx" << std::endl;
             auto dx = path[i + 1]->x - path[i]->x;
+            std::cout << "dy" << std::endl;
+            std::cout << path[i]->y << std::endl;
+            std::cout << path[i + 1]->y << std::endl;
             auto dy = path[i + 1]->y - path[i]->y;
+            std::cout << "atan2" << std::endl;
             auto new_rot = std::atan2(dy, dx);
             time += (new_rot - last_rot) / w;
             time += std::hypot(dx, dy) / v;
@@ -135,11 +141,20 @@ int main(int argc, char** argv)
 
     // bullshit values
     auto start = find_closest(dijkstra::point(1, 2.1));
+    if (start == nullptr)
+        exit(1);
 
     auto fitness = [&](const dijkstra::path& path) {
         std::cout << "fit" << std::endl;
+        if (path.size() == 0)
+            return -100000.0f;
+        if (path.back() == nullptr)
+            exit(2);
+        std::cout << "fit2" << std::endl;
         auto exploration_time = path_time(path);
+        std::cout << "fit3" << std::endl;
         auto exit_time = path_time(graph.find(*path.back(), *start));
+        std::cout << "fit4" << std::endl;
         auto total_time = exploration_time + exit_time;
         // lazy negative inf
         if (total_time > 3 * 60)

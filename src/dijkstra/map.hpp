@@ -35,6 +35,8 @@ namespace dijkstra
 
         path& find(const point& start_approx, const point& goal_approx);
 
+        map(const map& other) = delete;
+
     private:
         point const* closest(const point& p_approx);
         void explore(point const* start, std::vector<point const*> goals);
