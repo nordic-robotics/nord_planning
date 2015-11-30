@@ -12,7 +12,7 @@ namespace graph
 {
 	class Maps{
 	public:
-		int n_wall=29;int n_point=19;
+		int n_wall=39;int n_point=15;
 		Maps();
 		std::vector< std::vector<int> > read_map(std::string filename);
 		void create_pointmap();

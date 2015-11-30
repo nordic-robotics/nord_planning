@@ -39,6 +39,18 @@ namespace graph
 			}
 		}
 		
+		/*int p;
+
+		for(int i=0;i<=(n_point-1)/2;i+=1){
+			for(int j=0;j<=(n_point-1)/2;j+=1){
+				p=(n_point-1)/2-std::abs(i-j);
+				pot_point[i][j]=(long int)(pow(3,p));
+				pot_point[i+(n_point-1)/2][j+(n_point-1)/2]=(long int)(pow(3,p));
+				pot_point[-i+(n_point-1)][j]=(long int)(pow(3,p));
+				pot_point[i][-j+(n_point-1)]=(long int)(pow(3,p));
+			}
+		}*/
+		
 
 		map=read_map(ros::package::getPath("nord_planning") + "/data/contest_rehearsal_maze.txt");
 		
@@ -360,83 +372,85 @@ namespace graph
 								//do a line a analysis as before (when reading the map for diagonal lines), 
 								//but this time verify also "square" number of points on each side of the line to guarantee
 								//that there are no walls in the way
-								if (mx>=my){
-									a=(((float) cy)-((float) j))/(((float) cx)-((float) i));
-									b=((float) j)-(a*((float) i));
-									if(cx>i){
-										for(fx=i;fx<=cx;fx+=1){
-											calc=(int) (a*fx+b);
-											for(fy=calc-square;fy<=calc+square;fy+=1){
-												if((fy>=0) && (fy<int(max_y*100+1))){
-													if(map[fx][fy]==1){
-														wall_flag=1;
-														break;
+								if(mx==0||my==0|| (mx<=30 && my<=30)){
+									if (mx>=my){
+										a=(((float) cy)-((float) j))/(((float) cx)-((float) i));
+										b=((float) j)-(a*((float) i));
+										if(cx>i){
+											for(fx=i;fx<=cx;fx+=1){
+												calc=(int) (a*fx+b);
+												for(fy=calc-square;fy<=calc+square;fy+=1){
+													if((fy>=0) && (fy<int(max_y*100+1))){
+														if(map[fx][fy]==1){
+															wall_flag=1;
+															break;
+														}
 													}
 												}
+												if(wall_flag==1){
+													break;
+												}
 											}
-											if(wall_flag==1){
-												break;
+										}else{
+											for(fx=cx;fx<=i;fx+=1){
+												calc=(int) (a*fx+b);
+												for(fy=calc-square;fy<=calc+square;fy+=1){
+													if((fy>=0) && (fy<int(max_y*100+1))){
+														if(map[fx][fy]==1){
+															wall_flag=1;
+															break;
+														}
+													}
+												}
+												if(wall_flag==1){
+													break;
+												}
 											}
 										}
+										
 									}else{
-										for(fx=cx;fx<=i;fx+=1){
-											calc=(int) (a*fx+b);
-											for(fy=calc-square;fy<=calc+square;fy+=1){
-												if((fy>=0) && (fy<int(max_y*100+1))){
-													if(map[fx][fy]==1){
-														wall_flag=1;
-														break;
+										a=(((float) cx)-((float) i))/(((float) cy)-((float) j));
+										b=((float) i)-(a*((float) j));
+										if(cy>j){
+											for(fy=j;fy<=cy;fy+=1){
+												calc=(int) (a*fy+b);
+												for(fx=calc-square;fx<=calc+square;fx+=1){
+													if((fx>=0) && (fx<int(max_x*100+1))){
+														if(map[fx][fy]==1){
+															wall_flag=1;
+															break;
+														}
 													}
 												}
+												if(wall_flag==1){
+													break;
+												}
 											}
-											if(wall_flag==1){
-												break;
+										}else{
+											for(fy=cy;fy<=j;fy+=1){
+												calc=(int) (a*fy+b);
+												for(fx=calc-square;fx<=calc+square;fx+=1){
+													if((fx>=0) && (fx<int(max_x*100+1))){
+														if(map[fx][fy]==1){
+															wall_flag=1;
+															break;
+														}
+													}
+												}
+												if(wall_flag==1){
+													break;
+												}
 											}
 										}
+										
 									}
-									
-								}else{
-									a=(((float) cx)-((float) i))/(((float) cy)-((float) j));
-									b=((float) i)-(a*((float) j));
-									if(cy>j){
-										for(fy=j;fy<=cy;fy+=1){
-											calc=(int) (a*fy+b);
-											for(fx=calc-square;fx<=calc+square;fx+=1){
-												if((fx>=0) && (fx<int(max_x*100+1))){
-													if(map[fx][fy]==1){
-														wall_flag=1;
-														break;
-													}
-												}
-											}
-											if(wall_flag==1){
-												break;
-											}
-										}
-									}else{
-										for(fy=cy;fy<=j;fy+=1){
-											calc=(int) (a*fy+b);
-											for(fx=calc-square;fx<=calc+square;fx+=1){
-												if((fx>=0) && (fx<int(max_x*100+1))){
-													if(map[fx][fy]==1){
-														wall_flag=1;
-														break;
-													}
-												}
-											}
-											if(wall_flag==1){
-												break;
-											}
-										}
+									//if there are no walls connect, note that the node number started with 3 and not zero,
+									//thats way we need to take 3 of the number
+									if(wall_flag==0){
+										//ROS_INFO("connected: %d : %d",(map[cx][cy]-3),(map[i][j]-3));
+										//ROS_INFO("connected: %d %d : %d %d",cx,cy,i,j);
+										 m.connect((map[cx][cy]-3),(map[i][j]-3));
 									}
-									
-								}
-								//if there are no walls connect, note that the node number started with 3 and not zero,
-								//thats way we need to take 3 of the number
-								if(wall_flag==0){
-									//ROS_INFO("connected: %d : %d",(map[cx][cy]-3),(map[i][j]-3));
-									//ROS_INFO("connected: %d %d : %d %d",cx,cy,i,j);
-									 m.connect((map[cx][cy]-3),(map[i][j]-3));
 								}
 							}
 						}
@@ -498,7 +512,7 @@ namespace graph
 	//Search for the local minima in the given coords, and considering a max movement per call of "step"
 	std::vector<int> Maps::next_place(int fx, int fy, int step){
 		int i,j;
-		int min_val=-1;
+		long int min_val=-1;
 		std::vector<int> vec(2,0);
 		vec[0]=fx;
 		vec[1]=fy;
