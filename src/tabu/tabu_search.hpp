@@ -26,6 +26,7 @@ namespace tabu
         for (unsigned int i = 0; i < max_attempts; i++)
         {
             auto possibles = neighbours(current);
+            std::cout << i << " / " << max_attempts << std::endl;
 
             // computes possibles ∖ short_memory
             possibles.erase(
@@ -61,6 +62,7 @@ namespace tabu
             short_memory.push_front(challenger.second);
 
             best = challenger.first > best.first ? challenger : best;
+            std::cout << "new score: " << best.first;
 
             current = challenger.second;
         }

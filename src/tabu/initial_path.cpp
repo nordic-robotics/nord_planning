@@ -20,158 +20,19 @@ class InitialPath{
         visualization_msgs::Marker node_msg; 
 
         InitialPath(std::vector<std::vector<std::vector<Position>>>  nodes, map* maze, int x, int y, dijkstra::map& dijkstra_search, std::valarray<bool> walls)
-            : dijkstra_search(dijkstra_search), walls(walls) {
+            : walls(walls) {
             node_links = nodes;
             this->maze = maze;
-            start_x = x; start_y = y;
-
+            start_x = x;
+            start_y = y;
         }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //  ------------------------------------------ RANDOM -----------------------------------------------------
-    //
-    ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-    ConeOfSight random(){
-
-        end_position.x = start_x;
-        end_position.y = start_y;
-        int connections; 
-        int random_nr; 
-        Position pos;
-        Position new_pos;
-        int i = 0;
-        ConeOfSight node(this->maze, start_x, start_y, walls);
-        bool ok =false;
-        std::cout << "the size  = " << node.get_path().size() << std::endl;
-        std::cout << node.get_path()[0].x << ", " << node.get_path()[0].y << std::endl;
-        //ros::Time time = ros::Time::now();
-        //ros::Duration d = ros::Duration(1.5,0);
-        while(ok == false){
-            
-            pos = node.getPosition();
-            connections = node_links[pos.x][pos.y].size()-1;
-            random_nr   = rand()%connections;
-            // std::cout << "random number = " << random_nr << std::endl;
-            srand(i);
-            new_pos   = node_links[pos.x][pos.y][random_nr];
-            if(!(new_pos == end_position)){
-
-                // std::cout << " I wanna go to " << new_pos.x << "," << new_pos.y << std::endl;
-
-                node.rotateCone(new_pos.x,new_pos.y);
-            
-                node.moveCone(new_pos.x,new_pos.y);
-                node.add_to_path(new_pos);
-
-               
-                //d.sleep();
-                ++i;
-
-                if(i >= 3){
-                    ok= true;
-                    // std::cout << "the size after = " << node.get_path().size() << std::endl;
-                    // for(unsigned int i = 0; i < node.get_path().size(); ++i){
-                    //     std::cout << node.get_path()[i].x << ", " << node.get_path()[i].y << std::endl;
-                    }
-                }
-            }   
-
-        // }
-        // std::cout << "OMG hittade ut" << std::endl;
-        return node;
-            
-    } 
-    
-    ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //---------------------------------------- Neighbours ----------------------------------------------------
-    //
-    ///////////////////////////////////////////////////////////////////////////////////////////////////////////   
-    
-    std::vector<ConeOfSight> neighbours(const ConeOfSight& nodes){
-        std::cout << "inside neighbours" << std::endl;
-
-        std::vector<ConeOfSight> the_neighbours;
-        the_neighbours.clear();
-        int movments =  nodes.get_path().size()-3;
-        srand(time(NULL)); 
-        int random_value = std::rand()% movments; 
-        Position random_part = nodes.get_path()[random_value];
-        std::vector<Position> new_path;
-        std::vector<Position> temp_vec1;
-
-
-        Position next_next_node; 
-        Position next_node; 
-
-        unsigned int path_size = nodes.get_path().size()-1;
-        int last_x = nodes.get_path()[path_size].x;
-        int last_y = nodes.get_path()[path_size].y;
-        // std::cout << "path_size = " << path_size << std::endl;
-        // for(unsigned int k = 0; k < path_size; ++k){
-        //     std::cout << nodes.get_path()[k].x << ", " << nodes.get_path()[k].y << std::endl;
-        // }
-        //adds all the links to the last node
-        //here is a chance to save alot of time since i pushvka last path. just walk to next node
-
-        Position new_position;
-        for(unsigned int k = 0; k < node_links[last_x][last_y].size(); ++k){
-            ConeOfSight alternative_route(nodes);
-            new_position = node_links[last_x][last_y][k];
-            alternative_route.rotateCone(new_position.x, new_position.y);
-            alternative_route.moveCone(new_position.x,new_position.y);
-            alternative_route.add_to_path(new_position);
-            the_neighbours.push_back(alternative_route);
-            // std::cout << "läggs till ="  << node_links[last_x][last_y][k].x << ", " << node_links[last_x][last_y][k].y << std::endl;
-        }
-        //std::cout << "got past first for loop" << std::endl;
-
-        // tries to minimize the path 
-        // std::cout << "random_value = " << random_value << std::endl;   
-        next_node = nodes.get_path()[random_value+1];
-        //std::cout << "next_node = " << next_node.x << ", " << next_node.y << std::endl;  
-        next_next_node = nodes.get_path()[random_value+2];
-        temp_vec1 = node_links[random_part.x][random_part.y];
-
-        for(unsigned int i = 0; i < temp_vec1.size(); ++i){
-            //std::cout << "i =" << i << std::endl;
-            new_path = nodes.get_path();
-            if(temp_vec1[i] == next_next_node){ 
-                // std::cout << "FOUND a coool granne" << std::endl;
-                new_path.erase(new_path.begin() + (random_value +1));
-                the_neighbours.push_back(path_itteration(new_path));
-            }
-            // else{
-            //     if(node_links[(temp_vec1[i].x)][(temp_vec1[i].y)] == next_next_node){
-            //         new_path.erase(new_path.begin+)
-            //     }
-            // }
-        }   
-        std::cout << "ut ur neighbours" << std::endl;
-        return the_neighbours;
-    }
-    ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //---------------------------------------- itterate through path -----------------------------------------
-    //
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////// 
-
-    ConeOfSight path_itteration(std::vector<Position> path){
-        ConeOfSight node(this->maze, start_x, start_y, walls);
-        node.resetExplored();
-        for(unsigned int i = 0; i < path.size(); ++i){
-            node.rotateCone(path[i].x,path[i].y);
-            node.moveCone(path[i].x,path[i].y);
-            node.add_to_path(path[i]);
-        }
-        return node;
-    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////
     //---------------------------------------- simulation ----------------------------------------------------
     //
     /////////////////////////////////////////////////////////////////////////////////////////////////////////// 
 
-    void run_simulation(ConeOfSight node){
+    void run_simulation(ConeOfSight node, dijkstra::map& dijkstra_search){
         std::cout << "starting simulaiton" << std::endl;
 
         ros::Time time = ros::Time::now();
@@ -184,10 +45,10 @@ class InitialPath{
             d.sleep();
             node.rotateCone(path[i].x,path[i].y);
             std::cout << "x = " << path[i].x << "y = " << path[i].y << std::endl;
-            publish_all(node);
+            publish_all(node, dijkstra_search);
             d.sleep();
             node.moveCone(path[i].x,path[i].y);
-            publish_all(node);
+            publish_all(node, dijkstra_search);
             
             //std::cout << "i = " << i  << std::endl;
         } 
@@ -195,69 +56,10 @@ class InitialPath{
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //---------------------------------------- fitness ----------------------------------------------------
-    //
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////// 
-
-   float fitness(ConeOfSight& the_path)
-    {
-        //should i restart it, maybe try to find a different solution
-        // std::cout << "inside fitness" << std::endl;
-        float score = 0;
-        int max_time = 5 * 60;
-        double our_time = the_path.get_time();
-        unsigned int path_size = the_path.get_path().size()-1;
-        Position curr_pos = the_path.get_path()[path_size];
-        // std::cout << "curr pos = " << curr_pos.x << ", " << curr_pos.y << std::endl;
-        float coolness = 0;
-
-        //use the difference between explored instead, otherwise the idea behind
-        // it is solid   
-        if(curr_pos.x != start_x && curr_pos.y != start_y){
-            dijkstra::point starting_node(start_x/100.0, start_y/100.0);
-            dijkstra::point current_node(curr_pos.x/100.0, curr_pos.y/100.0);
-            dijkstra::path shortest_path;
-            shortest_path = dijkstra_search.find(current_node, starting_node);
-            shortest_path.compute_length(); 
-            coolness = shortest_path.length()*10;
-        }
-        else{
-            score -=1;
-        }
-        
-        
-        for(int i = 0; i < the_path.get_x_max(); ++i){
-            for(int j = 0; j < the_path.get_y_max();++j){
-                if(the_path.getExplored()[i + j * the_path.get_x_max()]){
-                    score+= coolness;
-                }
-            }
-        }
-        
-        if(!(the_path.get_path()[path_size] == end_position)){
-            score -= 5000;
-        }
-
-        
-        // score -= shortest_path.length()*2;  
-        if(our_time>max_time){
-            score = -5000;
-        }
-        if(path_size <20){
-            score -= 20000/path_size;
-        }
-        
-        // std::cout << "The score is = " << score << std::endl;
-        // std::cout << "Our estimated time is = " << our_time << std::endl;
-        return score;           
-    }
-
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////////////
     //---------------------------------------- Publish all ----------------------------------------------------
     //
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////   
-    void publish_all(const ConeOfSight& node){
+    void publish_all(const ConeOfSight& node, dijkstra::map& dijkstra_search){
             explored_msg = explored_message(node.getExplored(), node.get_x_max(), node.get_y_max());
             //std::cout << "1" << std::endl;
             cone_msg = cone_of_sight_message(node.getCone(), node.get_x_max(), node.get_y_max());
@@ -265,12 +67,14 @@ class InitialPath{
             map_msg = create_map_message(*maze);
             //std::cout << "3" << std::endl;
             node_msg = node_message(node_links, node.get_x_max(),node.get_y_max());
+            auto conn_msg = create_conn_message(dijkstra_search);
 
 
             explored_pub.publish(explored_msg);
             cone_pub.publish(cone_msg);
             map_pub.publish(map_msg);
             node_pub.publish(node_msg);
+            node_pub.publish(conn_msg);
     }        
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -430,17 +234,249 @@ class InitialPath{
         return line_list;
     }
 
+    visualization_msgs::Marker create_conn_message(dijkstra::map& maze)
+        {
+        visualization_msgs::Marker line_list;
+        line_list.id = 1;
+        line_list.type = visualization_msgs::Marker::LINE_LIST;
+        line_list.color.a = line_list.color.g = 1.0;
+        line_list.color.r = line_list.color.b = 0.6;
+        line_list.header.frame_id = "/map";
+        line_list.header.stamp = ros::Time::now();
+        line_list.ns = "ip_conns";
+        line_list.action = visualization_msgs::Marker::ADD;
+        line_list.pose.orientation.w = 1.0;
+        line_list.lifetime = ros::Duration();
+        line_list.scale.x = 0.01;
+
+        for (auto& p : maze.get_graph())
+        {
+            for (auto link : p.get_links())
+            {
+                geometry_msgs::Point p0, p1;
+                p0.x = p.x;
+                p0.y = p.y;
+                p1.x = link->x;
+                p1.y = link->y;
+                p0.z = p1.z = 0.02f;
+                line_list.points.push_back(p0);
+                line_list.points.push_back(p1);
+            }
+        }
+
+        return line_list;
+    }
 
 
 
-    private:
-        map *maze;
-        std::vector<std::vector<std::vector<Position>>> node_links;
-        int start_x; int start_y;
-        Position end_position;
-        std::valarray<bool> walls;
-        dijkstra::map& dijkstra_search;
+
+private:
+    map *maze;
+    std::valarray<bool> walls;
+    std::vector<std::vector<std::vector<Position>>> node_links;
+    int start_x;
+    int start_y;
 };
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+//---------------------------------------- itterate through path -----------------------------------------
+//
+/////////////////////////////////////////////////////////////////////////////////////////////////////////// 
+
+ConeOfSight path_itteration(const std::vector<Position>& path, map* maze, Position start,
+                            const std::valarray<bool> walls){
+    ConeOfSight node(maze, start.x, start.y, walls);
+    node.resetExplored();
+    for(auto& p : path){
+        node.rotateCone(p.x, p.y);
+        node.moveCone(p.x, p.y);
+        node.add_to_path(p);
+    }
+    return node;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+//---------------------------------------- Neighbours ----------------------------------------------------
+//
+///////////////////////////////////////////////////////////////////////////////////////////////////////////   
+
+std::vector<ConeOfSight> neighbours(const ConeOfSight& nodes,
+        const std::vector<std::vector<std::vector<Position>>>& node_links,
+        map* maze, const std::valarray<bool>& walls, const Position& start){
+
+    std::vector<ConeOfSight> the_neighbours;
+    the_neighbours.clear();
+    int movments =  nodes.get_path().size();
+    int random_value = std::rand()% movments; 
+    Position random_part = nodes.get_path()[random_value];
+    std::vector<Position> new_path;
+    std::vector<Position> temp_vec1;
+
+
+    Position next_next_node; 
+    Position next_node; 
+
+    unsigned int path_size = nodes.get_path().size()-1;
+    int last_x = nodes.get_path()[path_size].x;
+    int last_y = nodes.get_path()[path_size].y;
+    // std::cout << "path_size = " << path_size << std::endl;
+    // for(unsigned int k = 0; k < path_size; ++k){
+    //     std::cout << nodes.get_path()[k].x << ", " << nodes.get_path()[k].y << std::endl;
+    // }
+    //adds all the links to the last node
+    //here is a chance to save alot of time since i pushvka last path. just walk to next node
+
+    Position new_position;
+    for(unsigned int k = 0; k < node_links[last_x][last_y].size(); ++k){
+        ConeOfSight alternative_route(nodes);
+        new_position = node_links[last_x][last_y][k];
+        if (new_position.x == last_x && new_position.y == last_y)
+        {
+            std::cout << "fitness is fucked yo" << std::endl;
+            exit(1);
+        }
+        alternative_route.rotateCone(new_position.x, new_position.y);
+        alternative_route.moveCone(new_position.x,new_position.y);
+        alternative_route.add_to_path(new_position);
+        the_neighbours.push_back(alternative_route);
+        // std::cout << "läggs till ="  << node_links[last_x][last_y][k].x << ", " << node_links[last_x][last_y][k].y << std::endl;
+    }
+    //std::cout << "got past first for loop" << std::endl;
+
+    // tries to minimize the path 
+    // std::cout << "random_value = " << random_value << std::endl;   
+    next_node = nodes.get_path()[random_value+1];
+    //std::cout << "next_node = " << next_node.x << ", " << next_node.y << std::endl;  
+    next_next_node = nodes.get_path()[random_value+2];
+    temp_vec1 = node_links[random_part.x][random_part.y];
+
+    for(unsigned int i = 0; i < temp_vec1.size(); ++i){
+        //std::cout << "i =" << i << std::endl;
+        new_path = nodes.get_path();
+        if(temp_vec1[i] == next_next_node){ 
+            // std::cout << "FOUND a coool granne" << std::endl;
+            new_path.erase(new_path.begin() + (random_value +1));
+            the_neighbours.push_back(path_itteration(new_path, maze, start, walls));
+        }
+        // else{
+        //     if(node_links[(temp_vec1[i].x)][(temp_vec1[i].y)] == next_next_node){
+        //         new_path.erase(new_path.begin+)
+        //     }
+        // }
+    }   
+    std::cout << "num: " << the_neighbours.size() << std::endl;
+    return the_neighbours;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+//  ------------------------------------------ RANDOM -----------------------------------------------------
+//
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+ConeOfSight random(const Position& start, const std::vector<std::vector<std::vector<Position>>>& node_links,
+                   const std::valarray<bool>& walls, map* maze){
+    Position end_position = start;
+    int connections; 
+    int random_nr; 
+    Position pos;
+    Position new_pos;
+    int i = 0;
+    ConeOfSight node(maze, start.x, start.y, walls);
+    bool ok =false;
+    std::cout << "the size  = " << node.get_path().size() << std::endl;
+    std::cout << node.get_path()[0].x << ", " << node.get_path()[0].y << std::endl;
+    //ros::Time time = ros::Time::now();
+    //ros::Duration d = ros::Duration(1.5,0);
+    while(ok == false){
+        
+        pos = node.getPosition();
+        connections = node_links[pos.x][pos.y].size();
+        random_nr   = rand()%connections;
+        // std::cout << "random number = " << random_nr << std::endl;
+        new_pos   = node_links[pos.x][pos.y][random_nr];
+        if(!(new_pos == end_position)){
+
+
+            node.rotateCone(new_pos.x,new_pos.y);
+        
+            node.moveCone(new_pos.x,new_pos.y);
+            node.add_to_path(new_pos);
+
+           
+            //d.sleep();
+            ++i;
+
+            if(i >= 20){
+                ok= true;
+                // std::cout << "the size after = " << node.get_path().size() << std::endl;
+                // for(unsigned int i = 0; i < node.get_path().size(); ++i){
+                //     std::cout << node.get_path()[i].x << ", " << node.get_path()[i].y << std::endl;
+                }
+            }
+        }   
+
+    // }
+    // std::cout << "OMG hittade ut" << std::endl;
+    return node;
+} 
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+//---------------------------------------- fitness ----------------------------------------------------
+//
+/////////////////////////////////////////////////////////////////////////////////////////////////////////// 
+
+float fitness(const ConeOfSight& the_path, const Position& start, dijkstra::map& dijkstra_search)
+{
+    //should i restart it, maybe try to find a different solution
+    float score = 0;
+    int max_time = 5 * 60;
+    double our_time = the_path.get_time();
+    unsigned int path_size = the_path.get_path().size()-1;
+    Position curr_pos = the_path.get_path()[path_size];
+    // std::cout << "curr pos = " << curr_pos.x << ", " << curr_pos.y << std::endl;
+    float coolness = 0;
+
+    //use the difference between explored instead, otherwise the idea behind
+    // it is solid   
+    if(curr_pos.x != start.x && curr_pos.y != start.y){
+        dijkstra::point starting_node(start.x/100.0, start.y/100.0);
+        dijkstra::point current_node(curr_pos.x/100.0, curr_pos.y/100.0);
+        dijkstra::path shortest_path;
+        shortest_path = dijkstra_search.find(current_node, starting_node);
+        shortest_path.compute_length(); 
+        coolness = shortest_path.length()*10;
+    }
+    else{
+        score -=1;
+    }
+    
+    
+    for(int i = 0; i < the_path.get_x_max(); ++i){
+        for(int j = 0; j < the_path.get_y_max();++j){
+            if(the_path.getExplored()[i + j * the_path.get_x_max()]){
+                score+= coolness;
+            }
+        }
+    }
+    /*
+    if(!(the_path.get_path()[path_size] == start)){
+        score -= 5000;
+    }
+
+    
+    // score -= shortest_path.length()*2;  
+    if(our_time>max_time){
+        score = -5000;
+    }
+    if(path_size <20){
+        score -= 20000/path_size;
+    }
+    */
+    // std::cout << "The score is = " << score << std::endl;
+    // std::cout << "Our estimated time is = " << our_time << std::endl;
+    return score;           
+}
 
 
 //###########!!!!!!!!!!!!!!!###############!!!!!!!!!!!!#############!!!!!!!!###########!!!!!!!!!!###########!!!!!!!!!!###########
@@ -597,7 +633,6 @@ void load_graph(std::string filename, dijkstra::map& graph)
         std::getline(iss, l, ',');
         float y = std::stod(l);
 
-        std::cout << "looking for child at " << x << " " << y << std::endl;
         unsigned int child = -1;
         for (size_t i = 0; i < graph.get_graph().size(); i++)
         {
@@ -607,7 +642,6 @@ void load_graph(std::string filename, dijkstra::map& graph)
                 break;
             }
         }
-        std::cout << "ping " << parent << " " << child << std::endl;
         graph.connect(parent, child);
     }
 
@@ -620,13 +654,14 @@ int main(int argc, char** argv)
 
     srand(time(NULL));
 	ros::init(argc, argv, "initial_path");
-	map maze = read_map(ros::package::getPath("nord_planning") + "/data/small_maze.txt");
+	map maze = read_map(ros::package::getPath("nord_planning") + "/data/contest_rehearsal_maze.txt");
     std::vector<std::vector<std::vector<Position>>> node_vector = read_nodes(ros::package::getPath("nord_planning") + "/links.txt", maze.get_max_x(), maze.get_max_y());
     std::valarray<bool> walls = read_walls(ros::package::getPath("nord_planning") + "/Map.txt",maze.get_max_x()*100, maze.get_max_y()*100);
 
     dijkstra::map minimum_path;
     load_graph(ros::package::getPath("nord_planning") + "/links.txt", minimum_path);
-    InitialPath path(node_vector, &maze, 0, 15, minimum_path, walls);
+    Position start(15, 15);
+    InitialPath path(node_vector, &maze, start.x, start.y, minimum_path, walls);
     // auto test = path.random();
     // path.run_simulation(test);
 
@@ -641,11 +676,11 @@ int main(int argc, char** argv)
     
 
     std::cout << "starting the tabu search" << std::endl;
-    int max_attempts = 120;
+    int max_attempts = 100;
     int short_memory = 200;   
 
-    std::pair<float, ConeOfSight> best = tabu::search<ConeOfSight>(max_attempts, short_memory, [&](ConeOfSight& c) { return path.fitness(c); },
-        [&]() { return path.random(); }, [&](ConeOfSight v) {return path.neighbours(v);});
+    std::pair<float, ConeOfSight> best = tabu::search<ConeOfSight>(max_attempts, short_memory, [&](const ConeOfSight& c) { return fitness(c, start, minimum_path); },
+        [&]() { return random(start, node_vector, walls, &maze); }, [&](const ConeOfSight& c) { return neighbours(c, node_vector, &maze, walls, start);});
     std::cout << "Done with the search" <<  std::endl;
     std::cout << "Winning score is = " << best.first << std::endl;
     std::cout << "Winning alternatieve found back = " << best.second.point_cap << std::endl;
@@ -655,7 +690,7 @@ int main(int argc, char** argv)
     for(unsigned int i = 0; i < path_size ; ++i){
         std::cout << best.second.get_path()[i].x << ", " << best.second.get_path()[i].y << std:: endl;
     }
-    path.run_simulation(best.second);
+    path.run_simulation(best.second, minimum_path);
     return 0;       
 
    
