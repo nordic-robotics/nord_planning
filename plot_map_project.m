@@ -11,8 +11,8 @@ for i=1:length(map(:,1))
     end
 end
 
-links=importdata('links_goncas.txt');
+links=importdata('links.txt');
 
 for i=1:length(links(:,1))
-    plot([links(i,1)*100,links(i,3)*100],[links(i,2)*100,links(i,4)*100],'Color','g');
+    plot([links(i,1),links(i,3)],[links(i,2),links(i,4)],'Color','g');
 end
