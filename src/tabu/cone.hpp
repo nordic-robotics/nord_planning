@@ -41,7 +41,6 @@ class ConeOfSight{
         
         bool point_cap;
         ConeOfSight(map* maze,int start_x, int start_y, std::valarray<bool> walls);
-        ConeOfSight(ConeOfSight const& cone);
 
         void changeWidth(float new_width);
         void createCone();
@@ -88,6 +87,5 @@ class ConeOfSight{
         int start_x; int start_y;
         ros::NodeHandle* n;
         map *maze;
-
 
 };

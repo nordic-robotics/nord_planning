@@ -32,15 +32,16 @@ class InitialPath{
     //
     /////////////////////////////////////////////////////////////////////////////////////////////////////////// 
 
-    void run_simulation(ConeOfSight node, dijkstra::map& dijkstra_search){
+    void run_simulation(ConeOfSight node, Position start, std::valarray<bool> walls,
+                        dijkstra::map& dijkstra_search, map* maze){
         std::cout << "starting simulaiton" << std::endl;
 
         ros::Time time = ros::Time::now();
-        ros::Duration d = ros::Duration(2,0); 
+        ros::Duration d = ros::Duration(1); 
 
         std::vector<Position> path = node.get_path();
         std::cout << node.get_path().size() << std::endl;
-        node.resetExplored();
+        node = ConeOfSight(maze, start.x, start.y, walls);
         for(unsigned int i = 0; i < path.size(); ++i){
             d.sleep();
             node.rotateCone(path[i].x,path[i].y);
@@ -95,10 +96,10 @@ class InitialPath{
         explored.scale.x = 0.01f;
         explored.scale.y = 0.01f;
         explored.scale.z = 0.01f;
-        explored.color.r = 1.0f;
-        explored.color.g = 0;
+        explored.color.r = 0.4f;
+        explored.color.g = 0.7;
         explored.color.b = 1.0f;
-        explored.color.a = 1.0f;
+        explored.color.a = 0.5f;
         explored.action = visualization_msgs::Marker::ADD;
         for (int i = 0; i < x_max; ++i)
         {
@@ -138,8 +139,8 @@ class InitialPath{
         cone.scale.z = 0.01f;
         cone.color.r = 1.0f;
         cone.color.g = 1.0f;
-        cone.color.b = 0;
-        cone.color.a = 1.0f;
+        cone.color.b = 1.0;
+        cone.color.a = 0.7f;
         cone.action = visualization_msgs::Marker::ADD;
         // ROS_INFO("seeing.getMaxX() = %d",seeing.getMaxX());
         // ROS_INFO("seeing.getMaxY() = %d",seeing.getMaxY());
@@ -239,7 +240,8 @@ class InitialPath{
         visualization_msgs::Marker line_list;
         line_list.id = 1;
         line_list.type = visualization_msgs::Marker::LINE_LIST;
-        line_list.color.a = line_list.color.g = 1.0;
+        line_list.color.a = 0.1;
+        line_list.color.g = 1.0;
         line_list.color.r = line_list.color.b = 0.6;
         line_list.header.frame_id = "/map";
         line_list.header.stamp = ros::Time::now();
@@ -303,10 +305,30 @@ ConeOfSight path_itteration(const std::vector<Position>& path, map* maze, Positi
 
 std::vector<ConeOfSight> neighbours(const ConeOfSight& nodes,
         const std::vector<std::vector<std::vector<Position>>>& node_links,
-        map* maze, const std::valarray<bool>& walls, const Position& start){
+        map* maze, const std::valarray<bool>& walls, const Position& start, int depth = 4){
 
     std::vector<ConeOfSight> the_neighbours;
-    the_neighbours.clear();
+    //std::cout << "depth: " << depth << std::endl;
+    if (depth <= 1 || !ros::ok())
+    {
+        the_neighbours.push_back(nodes);
+        return the_neighbours;
+    }
+
+    int i = 0;
+    for (auto& p : node_links[nodes.get_path().back().x][nodes.get_path().back().y])
+    {
+        if (i++ > 10 * depth)
+            break;
+        ConeOfSight copy = nodes;
+        copy.rotateCone(p.x, p.y);
+        copy.moveCone(p.x, p.y);
+        copy.add_to_path(p);
+        auto deep_neighbours = neighbours(copy, node_links, maze, walls, start, depth - 1);
+        std::move(deep_neighbours.begin(), deep_neighbours.end(), std::back_inserter(the_neighbours));
+    }
+    return the_neighbours;
+
     int movments =  nodes.get_path().size();
     int random_value = std::rand()% movments; 
     Position random_part = nodes.get_path()[random_value];
@@ -329,7 +351,7 @@ std::vector<ConeOfSight> neighbours(const ConeOfSight& nodes,
 
     Position new_position;
     for(unsigned int k = 0; k < node_links[last_x][last_y].size(); ++k){
-        ConeOfSight alternative_route(nodes);
+        ConeOfSight alternative_route = nodes;
         new_position = node_links[last_x][last_y][k];
         if (new_position.x == last_x && new_position.y == last_y)
         {
@@ -386,6 +408,7 @@ ConeOfSight random(const Position& start, const std::vector<std::vector<std::vec
     bool ok =false;
     std::cout << "the size  = " << node.get_path().size() << std::endl;
     std::cout << node.get_path()[0].x << ", " << node.get_path()[0].y << std::endl;
+    return node;
     //ros::Time time = ros::Time::now();
     //ros::Duration d = ros::Duration(1.5,0);
     while(ok == false){
@@ -436,7 +459,7 @@ float fitness(const ConeOfSight& the_path, const Position& start, dijkstra::map&
     Position curr_pos = the_path.get_path()[path_size];
     // std::cout << "curr pos = " << curr_pos.x << ", " << curr_pos.y << std::endl;
     float coolness = 0;
-
+    /*
     //use the difference between explored instead, otherwise the idea behind
     // it is solid   
     if(curr_pos.x != start.x && curr_pos.y != start.y){
@@ -449,13 +472,14 @@ float fitness(const ConeOfSight& the_path, const Position& start, dijkstra::map&
     }
     else{
         score -=1;
-    }
+    }*/
     
     
+
     for(int i = 0; i < the_path.get_x_max(); ++i){
         for(int j = 0; j < the_path.get_y_max();++j){
             if(the_path.getExplored()[i + j * the_path.get_x_max()]){
-                score+= coolness;
+                score += 1;
             }
         }
     }
@@ -654,13 +678,13 @@ int main(int argc, char** argv)
 
     srand(time(NULL));
 	ros::init(argc, argv, "initial_path");
-	map maze = read_map(ros::package::getPath("nord_planning") + "/data/contest_rehearsal_maze.txt");
+    map maze = read_map(ros::package::getPath("nord_planning") + "/data/contest_rehearsal_maze.txt");
     std::vector<std::vector<std::vector<Position>>> node_vector = read_nodes(ros::package::getPath("nord_planning") + "/links.txt", maze.get_max_x(), maze.get_max_y());
     std::valarray<bool> walls = read_walls(ros::package::getPath("nord_planning") + "/Map.txt",maze.get_max_x()*100, maze.get_max_y()*100);
 
     dijkstra::map minimum_path;
     load_graph(ros::package::getPath("nord_planning") + "/links.txt", minimum_path);
-    Position start(15, 15);
+    Position start(20, 20); // find closest?
     InitialPath path(node_vector, &maze, start.x, start.y, minimum_path, walls);
     // auto test = path.random();
     // path.run_simulation(test);
@@ -676,13 +700,13 @@ int main(int argc, char** argv)
     
 
     std::cout << "starting the tabu search" << std::endl;
-    int max_attempts = 100;
-    int short_memory = 200;   
+    int max_attempts = 25;
+    int short_memory = 1000;   
 
     std::pair<float, ConeOfSight> best = tabu::search<ConeOfSight>(max_attempts, short_memory, [&](const ConeOfSight& c) { return fitness(c, start, minimum_path); },
         [&]() { return random(start, node_vector, walls, &maze); }, [&](const ConeOfSight& c) { return neighbours(c, node_vector, &maze, walls, start);});
     std::cout << "Done with the search" <<  std::endl;
-    std::cout << "Winning score is = " << best.first << std::endl;
+    std::cout << "Winning   score is = " << best.first << std::endl;
     std::cout << "Winning alternatieve found back = " << best.second.point_cap << std::endl;
     std::cout << "The time it took was = " << best.second.get_time() << " following was max = " << 60*5 << std::endl;
     //exit(1);
@@ -690,8 +714,14 @@ int main(int argc, char** argv)
     for(unsigned int i = 0; i < path_size ; ++i){
         std::cout << best.second.get_path()[i].x << ", " << best.second.get_path()[i].y << std:: endl;
     }
-    path.run_simulation(best.second, minimum_path);
-    return 0;       
 
-   
+    {
+        std::ofstream file(ros::package::getPath("nord_planning")+"/data/plan.txt");
+        for (auto& p : best.second.get_path())
+        {
+            file << (p.x / 100.0) << " " << (p.y / 100.0) << std::endl;
+        }
+    }
+    path.run_simulation(best.second, start, walls, minimum_path, &maze);
+    return 0;
 };

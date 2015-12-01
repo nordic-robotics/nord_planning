@@ -38,6 +38,16 @@ namespace graph
 				}
 			}
 		}
+		/*int p;
+		for(int i=0;i<=(n_point-1)/2;i+=1){
+			for(int j=0;j<=(n_point-1)/2;j+=1){
+				p=(n_point-1)/2-std::abs(i-j);
+				pot_point[i][j]=(long int)(pow(3,p));
+				pot_point[i+(n_point-1)/2][j+(n_point-1)/2]=(long int)(pow(3,p));
+				pot_point[-i+(n_point-1)][j]=(long int)(pow(3,p));
+				pot_point[i][-j+(n_point-1)]=(long int)(pow(3,p));
+			}
+		}*/
 		
 		/*int p;
 
@@ -318,22 +328,22 @@ namespace graph
 		
 		
 		for (auto& node : m.get_graph())
-		{	
+		{   
 			/* gonca version
 			for (auto link : node.get_links()){
 				file3<< node.x <<','<< node.y<<",";
 				file3<<link->x<<','<<link->y<<std::endl;
 			}*/
 			file3 << "%" << "\n";
-			file3<< node.x <<','<< node.y;
+			file3<< (node.x / 100.0) <<','<< (node.y / 100.0);
 			for (auto link : node.get_links()){
-				file3<<"\n\t"<<link->x<<','<<link->y;
+				file3<<"\n\t"<<(link->x / 100.0)<<','<<(link->y / 100.0);
 			}
 			file3<<"\n";
 		}
 	}
 	
-	dijkstra::map * Maps::create_graph(){
+	dijkstra::map* Maps::create_graph(){
 		int cx,cy;
 		int node=3;
 		int square=14;//half the size of the side of the square that goes through the line and sees if there is any wall near that path
@@ -348,7 +358,7 @@ namespace graph
 		for(cx=0;cx<int(max_x*100+1);cx+=1){
 			for(cy=0;cy<int(max_y*100+1);cy+=1){
 				if(map[cx][cy]==2){
-					graph.emplace_back(cx/100.0f, cy/100.0f);
+					graph.emplace_back(cx, cy);
 					map[cx][cy]=node;//numerate the nodes
 					node+=1;
 				}
@@ -372,7 +382,8 @@ namespace graph
 								//do a line a analysis as before (when reading the map for diagonal lines), 
 								//but this time verify also "square" number of points on each side of the line to guarantee
 								//that there are no walls in the way
-								if(mx==0||my==0|| (mx<=30 && my<=30)){
+								//if(mx==0||my==0|| (mx<=30 && my<=30)){
+								if((mx + my <= 40 || (mx == 0 && my < 80) || (my == 0 && mx < 80))){
 									if (mx>=my){
 										a=(((float) cy)-((float) j))/(((float) cx)-((float) i));
 										b=((float) j)-(a*((float) i));
@@ -471,7 +482,7 @@ namespace graph
 		pot_map[cx][cy]+=pot[((n-1)/2)][((n-1)/2)];
 		for(i=0;i<=((n-1)/2);i+=1){
 			for(j=0;j<=((n-1)/2);j+=1){
-				if(j==0 && i==0) continue;
+				if((j==0) && (i==0)) continue;
 				if((cx-i)>=0 && (cy-j)>=0){
 					pot_map[cx-i][cy-j]+= pot[((n-1)/2)-i][((n-1)/2)-j];
 				}
@@ -493,7 +504,7 @@ namespace graph
 		pot_map[cx][cy]-=pot[((n-1)/2)][((n-1)/2)];
 		for(i=0;i<=((n-1)/2);i+=1){
 			for(j=0;j<=((n-1)/2);j+=1){
-				if(j==0 && i==0) continue;
+				if((j==0 )&& (i==0)) continue;
 				if((cx-i)>=0 && (cy-j)>=0){
 					pot_map[cx-i][cy-j]-= pot[((n-1)/2)-i][((n-1)/2)-j];
 				}

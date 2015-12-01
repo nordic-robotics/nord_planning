@@ -16,6 +16,16 @@ ConeOfSight::ConeOfSight(map* maze,int start_x,int start_y, std::valarray<bool> 
 	largest_y = temp_y*100; 	current_x = start_x;
 	largest_x = temp_x*100;	    current_y = start_y;
 	explored = std::valarray<bool>(false, largest_x * largest_y);
+	int start_area = 40;
+	for (int x = -start_area; x < start_area; x++)
+	{
+		for (int y = -start_area; y < start_area; y++)
+		{
+			if (start_x + x >= 0 && start_y + y >= 0)
+				explored[to1D(start_x + x, start_y + y)] = true;
+		}
+	}
+	std::cout << "uh?" << std::endl;
 	time_moving = 0; time_rotating = 0;
 	start_x = current_x;
 	start_y = current_y;
@@ -27,7 +37,7 @@ ConeOfSight::ConeOfSight(map* maze,int start_x,int start_y, std::valarray<bool> 
 	createCone();
 }
 
-ConeOfSight::ConeOfSight(ConeOfSight const& cone){
+/*ConeOfSight::ConeOfSight(ConeOfSight const& cone){
 	cone_angle = M_PI/6;
 	current_direction = cone.current_direction;
 	explored = cone.explored;
@@ -40,7 +50,7 @@ ConeOfSight::ConeOfSight(ConeOfSight const& cone){
 	this->maze = cone.maze;
 	walls = cone.walls;
 	// std::cout << "no problem" << std::endl;
-}
+}*/
 
 void ConeOfSight::add_to_path(Position pos){
 	path.push_back(pos);
@@ -70,16 +80,16 @@ void ConeOfSight::rotateCone(int new_x, int new_y){
 		if(real_rotation > 0){
 			current_direction += M_PI/36.0;
 			real_rotation -= M_PI/36.0;
-			createCone(); 
+			//createCone(); 
 		}
 		else{
 			current_direction -= M_PI/36.0;
 			real_rotation += M_PI/36.0;
-			createCone();
+			//createCone();
 		}		 
 	}
 	current_direction += real_rotation;
-	createCone();	
+	//createCone();	
 }
 
 
@@ -316,9 +326,7 @@ void ConeOfSight::createCone(){
     			line<2> line(start,end);
     			auto wall_collition = maze->raycast(line);
     			if(!(wall_collition)){ 
-    				if(!explored[to1D(temp_x, temp_y)]){ 
-    					explored[to1D(temp_x, temp_y)] = true; 
-    				}	   				
+    				explored[to1D(temp_x, temp_y)] = true; 
     				// else{
     				// 	explored[temp_x][temp_y] = -0.01;
     				// }
