@@ -383,7 +383,7 @@ namespace graph
 								//but this time verify also "square" number of points on each side of the line to guarantee
 								//that there are no walls in the way
 								//if(mx==0||my==0|| (mx<=30 && my<=30)){
-								if((mx + my <= 40 || (mx == 0 && my < 80) || (my == 0 && mx < 80))){
+								if((mx + my <= 40 || (mx == 0 ) || (my == 0))){
 									if (mx>=my){
 										a=(((float) cy)-((float) j))/(((float) cx)-((float) i));
 										b=((float) j)-(a*((float) i));
