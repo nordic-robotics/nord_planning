@@ -80,16 +80,16 @@ void ConeOfSight::rotateCone(int new_x, int new_y){
 		if(real_rotation > 0){
 			current_direction += M_PI/36.0;
 			real_rotation -= M_PI/36.0;
-			//createCone(); 
+			createCone(); 
 		}
 		else{
 			current_direction -= M_PI/36.0;
 			real_rotation += M_PI/36.0;
-			//createCone();
+			createCone();
 		}		 
 	}
 	current_direction += real_rotation;
-	//createCone();	
+	createCone();	
 }
 
 

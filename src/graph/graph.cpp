@@ -341,6 +341,7 @@ namespace graph
 			}
 			file3<<"\n";
 		}
+		file3 << "%";
 	}
 	
 	dijkstra::map* Maps::create_graph(){
