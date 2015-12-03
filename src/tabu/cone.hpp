@@ -54,6 +54,7 @@ class ConeOfSight{
 
         const std::valarray<bool>& getCone() const{ return cone_matrix;};
         const std::valarray<bool>& getExplored() const{ return explored;};
+        unsigned int getNumExplored();
         const Position getPosition() const;
         const std::vector<Position>& get_path()const{return path;};
         // const double& get_time()const {return total_time;};

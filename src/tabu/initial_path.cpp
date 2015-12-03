@@ -323,7 +323,7 @@ ConeOfSight path_itteration(const std::vector<Position>& path, map* maze, Positi
 
 std::vector<ConeOfSight> neighbours(const ConeOfSight& nodes,
         const std::vector<std::vector<std::vector<Position>>>& node_links,
-        map* maze, const std::valarray<bool>& walls, const Position& start, int depth = 4){
+        map* maze, const std::valarray<bool>& walls, const Position& start, int depth = 5){
 
     std::vector<ConeOfSight> the_neighbours;
     //std::cout << "depth: " << depth << std::endl;
@@ -336,8 +336,8 @@ std::vector<ConeOfSight> neighbours(const ConeOfSight& nodes,
     int i = 0;
     for (auto& p : node_links[nodes.get_path().back().x][nodes.get_path().back().y])
     {
-        if (i++ > 10 * depth)
-            break;
+        //if (i++ > 10 * depth)
+        //    break;
         ConeOfSight copy = nodes;
         copy.rotateCone(p.x, p.y);
         copy.moveCone(p.x, p.y);
@@ -345,6 +345,8 @@ std::vector<ConeOfSight> neighbours(const ConeOfSight& nodes,
         auto deep_neighbours = neighbours(copy, node_links, maze, walls, start, depth - 1);
         std::move(deep_neighbours.begin(), deep_neighbours.end(), std::back_inserter(the_neighbours));
     }
+    if (depth == 5)
+        std::cout << "num neighbours at max depth: " << the_neighbours.size() << std::endl;
     return the_neighbours;
 
     int movments =  nodes.get_path().size();
@@ -409,6 +411,35 @@ std::vector<ConeOfSight> neighbours(const ConeOfSight& nodes,
     return the_neighbours;
 }
 
+
+ConeOfSight deep_greedy_search(const ConeOfSight& nodes,
+        const std::vector<std::vector<std::vector<Position>>>& node_links,
+        map* maze, const std::valarray<bool>& walls, const Position& start, int depth){
+
+    //std::cout << "depth: " << depth << std::endl;
+    if (depth <= 1 || !ros::ok())
+    {
+        return nodes;
+    }
+
+    auto best = nodes;
+    unsigned int best_count = 0;
+    for (auto& p : node_links[nodes.get_path().back().x][nodes.get_path().back().y])
+    {
+        ConeOfSight challenger = nodes;
+        challenger.rotateCone(p.x, p.y);
+        challenger.moveCone(p.x, p.y);
+        challenger.add_to_path(p);
+        challenger = deep_greedy_search(challenger, node_links, maze, walls, start, depth - 1);
+        unsigned int challenger_count = challenger.getNumExplored();
+        if (challenger_count > best_count)
+        {
+            best_count = challenger_count;
+            best = challenger;
+        }
+    }
+    return best;
+}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 //  ------------------------------------------ RANDOM -----------------------------------------------------
@@ -817,11 +848,22 @@ int main(int argc, char** argv)
     
 
     std::cout << "starting the tabu search" << std::endl;
-    int max_attempts = 12;
+    int max_attempts = 5;
     int short_memory = 1000;   
 
-    std::pair<float, ConeOfSight> best = tabu::search<ConeOfSight>(max_attempts, short_memory, [&](const ConeOfSight& c) { return fitness(c, start, minimum_path); },
-        [&]() { return random(start, node_vector, walls, &maze); }, [&](const ConeOfSight& c) { return neighbours(c, node_vector, &maze, walls, start);});
+    //std::pair<float, ConeOfSight> best = tabu::search<ConeOfSight>(max_attempts, short_memory, [&](const ConeOfSight& c) { return fitness(c, start, minimum_path); },
+    //    [&]() { return random(start, node_vector, walls, &maze); }, [&](const ConeOfSight& c) { return neighbours(c, node_vector, &maze, walls, start);});
+
+    auto total_area = maze.get_max_x() * 100 * maze.get_max_y() * 100;
+    auto current = random(start, node_vector, walls, &maze);
+    for (size_t i = 0; i < max_attempts; i++)
+    {
+        current = deep_greedy_search(current, node_vector,
+                                     &maze, walls, start, 5);
+        std::cout << (i + 1) << " / " << max_attempts << ", " << current.getNumExplored() << " explored out of " << total_area << std::endl;
+    }
+    auto best = std::make_pair(current.getNumExplored(), current);
+
     std::cout << "Done with the search" <<  std::endl;
     std::cout << "Winning   score is = " << best.first << std::endl;
     std::cout << "Winning alternatieve found back = " << best.second.point_cap << std::endl;
