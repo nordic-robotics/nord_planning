@@ -1,14 +1,13 @@
 #include "point.hpp"
 #include <cmath>
 #include <iostream>
+#include <algorithm>
 
 namespace dijkstra
 {
     float point::distance(point const* other) const
     {
-        auto dx = (other->x - x);
-        auto dy = (other->y - y);
-        return sqrt(dx * dx + dy * dy);
+        return std::hypot(other->x - x, other->y - y);
     }
     float point::distance(const point& other) const
     {
@@ -23,7 +22,11 @@ namespace dijkstra
     void point::connect(point* other)
     {
         links.push_back(other);
-        //other->links.push_back(this);
+    }
+
+    void point::disconnect(point* other)
+    {
+        links.erase(std::remove(links.begin(), links.end(), other), links.end());
     }
 
     bool operator==(const point& lhs, const point& rhs)

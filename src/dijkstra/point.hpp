@@ -13,6 +13,7 @@ namespace dijkstra
         float distance(const point& other) const;
         const std::vector<point*>& get_links() const;
         void connect(point* other);
+        void disconnect(point* other);
 
         float x;
         float y;

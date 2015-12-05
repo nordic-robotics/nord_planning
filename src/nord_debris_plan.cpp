@@ -24,7 +24,22 @@ int n_wall=29;
 int clear_debris=11;
 int n_debris=2*clear_debris+1;
 float min_x, min_y, max_x, max_y;
+std::vector<point<2>> actual_path;
 
+std::vector<point<2>> read_path(std::string filename)
+{
+    std::ifstream file(filename);
+    std::string l;
+    std::vector<point<2>> path;
+    while (std::getline(file, l))
+    {
+        std::istringstream iss(l);
+        float x, y;
+        iss >> x >> y;
+        path.emplace_back(x, y);
+    }
+    return path;
+}
 
 void load_graph(std::string filename)
 {
@@ -207,8 +222,8 @@ std::vector< std::vector<int> > Maps::read_map(std::string filename){
 		if(mx0!=mx1){
 			if(my0!=my1){//diagonal lines 
 				
-				diffx=mx1-mx0;
-				diffy=my1-my0;
+				diffx=std::abs(mx1-mx0);
+				diffy=std::abs(my1-my0);
 				if (diffx>=diffy){//choose the coord varying the most and create a line depending on that one
 					a=(((float) my0)-((float) my1))/(((float) mx0)-((float) mx1));
 					b=((float) my1)-(a*((float) mx1));
@@ -305,8 +320,8 @@ bool check_connection(int mx0,int my0,int mx1,int my1){
 	if(mx0!=mx1){
 		if(my0!=my1){//diagonal lines 
 			
-			diffx=mx1-mx0;
-			diffy=my1-my0;
+			diffx=std::abs(mx1-mx0);
+			diffy=std::abs(my1-my0);
 			if (diffx>=diffy){//choose the coord varying the most and create a line depending on that one
 				a=(((float) my0)-((float) my1))/(((float) mx0)-((float) mx1));
 				b=((float) my1)-(a*((float) mx1));
@@ -421,80 +436,124 @@ bool check_connection(int mx0,int my0,int mx1,int my1){
 	
 }
 
-bool create_new_nodes(){
+bool create_new_nodes(std::vector<nord_messages::Debris> data){
 	bool flag_new=false;
-	int new=0;
-	std::vector< std::vector<int> >  map_debris2=map_debris;
-	size_t i=graph.get_graph().size();
+	int i;
+	int mx0,my0,mx1,my1;
 	
+	std::vector< std::vector<int> >  map_debris2=map_debris;
+	size_t num_nodes=graph.get_graph().size();
+	mx0=lround(data.x*100);
+	my0=lround(data.y*100);
+	num_nodes=0;
+	for(i=0;i<=data.hull.size();i++){
+		mx1=lround(data.hull[i].x*100);
+		my1=lround(data.hull[i].y*100);
+		
+		if(mx0!=mx1){
+			if(my0!=my1){//diagonal lines 
+				
+				diffx=std::abs(mx1-mx0);
+				diffy=std::abs(my1-my0);
+				if (diffx>=diffy){//choose the coord varying the most and create a line depending on that one
+					a=(((float) my0)-((float) my1))/(((float) mx0)-((float) mx1));
+					b=((float) my1)-(a*((float) mx1));
+					if(mx0<mx1){
+						fx=mx1+clear_debris+1;
+						f=(a*fx+b);
+						fy=lround(f);
+						if(fx < int(max_x*100+1) && fy>=0 && fy < int(max_y*100+1) && map_debris[fx][fy]==0){
+							flag_new=true;
+							graph.add(dijkstra::point(fx/100.0f,fy/100.0f));
+						}
+					}else{
+						fx=mx1-clear_debris-1;
+						f=(a*fx+b);
+						fy=lround(f);
+						if(fx>=0 && fy>=0 && fy < int(max_y*100+1) && map_debris[fx][fy]==0){
+							flag_new=true;
+							graph.add(dijkstra::point(fx/100.0f,fy/100.0f));
+						}
+					}
+					
+				}else{
+					a=(((float) mx0)-((float) mx1))/(((float) my0)-((float) my1));
+					b=((float) mx1)-(a*((float) my1));
+					if(my0>my1){
+						fy=my1-clear_debris-1;
+						f=(a*fy+b);
+						fx=lround(f);
+						if(fx>=0 && fx < int(max_x*100+1) && fy>=0 && map_debris[fx][fy]==0){
+							flag_new=true;
+							graph.add(dijkstra::point(fx/100.0f,fy/100.0f));
+						}
+
+					}else{
+						fy=my1+clear_debris+1;
+						f=(a*fy+b);
+						fx=lround(f);
+						if(fx>=0 && fx < int(max_x*100+1) && fy < int(max_y*100+1) && map_debris[fx][fy]==0){
+							flag_new=true;
+							graph.add(dijkstra::point(fx/100.0f,fy/100.0f));
+						}
+						
+					}
+					
+				}
+			}else{//line which varies in x
+				fy=my0;
+				if(mx0<mx1){
+					fx=mx1+clear_debris+1;
+					if(fx < int(max_x*100+1) && map_debris[fx][fy]==0){
+						flag_new=true;
+						graph.add(dijkstra::point(fx/100.0f,fy/100.0f));
+					}
+					
+				}else{
+					fx=mx1-clear_debris-1;
+					if(fx>=0 && map_debris[fx][fy]==0){
+						flag_new=true;
+						graph.add(dijkstra::point(fx/100.0f,fy/100.0f));
+					}
+				}
+			}
+		}else if(my0!=my1){//line which varies in y
+			fx=mx0;
+			if(my0<my1){
+				fy<=my1+clear_debris+1;
+				if(fy < int(max_y*100+1) && map_debris[fx][fy]==0){
+					flag_new=true;
+					graph.add(dijkstra::point(fx/100.0f,fy/100.0f));
+				}
+			}else{
+				fy=my1-clear_debris-1;
+				if(fy >=0 && map_debris[fx][fy]==0){
+					flag_new=true;
+					graph.add(dijkstra::point(fx/100.0f,fy/100.0f));
+				}
+			}
+		}
+	}
 	for(int fx=0;fx<=int(max_x*100+1);fx++){
 		for(int fy=0;fy<=int(max_y*100+1);fy++){
 			if(map_debris[fx][fy]==2){
-				if(map_debris2[fx-1][fy-1]==0){
-					map_debris2[fx-1][fy-1]=3;
-				}
-				if(map_debris2[fx-1][fy]==0){
-					map_debris2[fx-1][fy]=3;
-				}
-				if(map_debris2[fx-1][fy+1]==0){
-					map_debris2[fx-1][fy+1]=3;
-				}
-				if(map_debris2[fx+1][fy-1]==0){
-					map_debris2[fx+1][fy-1]=3;
-				}
-				if(map_debris2[fx+1][fy]==0){
-					map_debris2[fx+1][fy]=3;
-				}
-				if(map_debris2[fx+1][fy+1]==0){
-					map_debris2[fx+1][fy+1]=3;
-				}
-				if(map_debris2[fx][fy+1]==0){
-					map_debris2[fx][fy+1]=3;
-				}
-				if(map_debris2[fx][fy-1]==0){
-					map_debris2[fx][fy-1]=3;
-				}
 				map_debris[fx][fy]=1;
 			}
 		}
 	}
 	
-	for(int fx=0;fx<=int(max_x*100+1);fx++){
-		for(int fy=0;fy<=int(max_y*100+1);fy++){
-			if(map_debris2[fx][fy]==3){
-				//ASSUMED WE ARE ALWAYS IN THE LIMITS OF THE MAP!!!! MUCH LESS CONDITIONS....
-				if(map_debris2[fx-1][fy]==3 && map_debris2[fx][fy+1]==3 && map_debris2[fx+1][fy-1]==0){
-					//emplace_back directly to the graph   [fx+1][fy-1]
-					flag_new=true;
-				}
-				if(map_debris2[fx+1][fy]==3 && map_debris2[fx][fy+1]==3 && map_debris2[fx-1][fy-1]==0){
-					//emplace_back directly to the graph   [fx-1][fy-1]
-					flag_new=true;
-				}
-				if(map_debris2[fx-1][fy]==3 && map_debris2[fx][fy-1]==3 && map_debris2[fx+1][fy+1]==0){
-					//emplace_back directly to the graph   [fx+1][fy11]
-					flag_new=true;
-				}
-				if(map_debris2[fx+1][fy]==3 && map_debris2[fx][fy-1]==3 && map_debris2[fx-1][fy+1]==0){
-					//emplace_back directly to the graph   [fx-1][fy+1]
-					flag_new=true;
-				}
-			}
-		}
-	}
-	
 	if(flag_new==true){
-		while(i<graph.get_graph().size()){
+		while(num_nodes<graph.get_graph().size()){
 			
 			for (size_t j = 0; j < graph.get_graph().size(); j++)
 			{
 				if(i!=j){
-					if(!check_connection(graph.get_graph()[i].x * 100 ,graph.get_graph()[i].y * 100, graph.get_graph()[j].x * 100 ,graph.get_graph()[j].y * 100)){//Verify the units 
-						graph.connect(i, j);//connects both ways RIGHT???
+					if(!check_connection(graph.get_graph()[num_nodes].x * 100 ,graph.get_graph()[num_nodes].y * 100, graph.get_graph()[j].x * 100 ,graph.get_graph()[j].y * 100)){//Verify the units 
+						graph.connect(num_nodes, j);//connects both ways RIGHT???
 					}
 				}
 			}
-			i++;
+			num_nodes++;
 		}
 		
 	}
@@ -505,6 +564,7 @@ void DebrisCallBack(const nord_messages::DebrisArray debris_array){
 	map_aux=map;
 	
 	int mx0,mx1,my0,my1;
+	int n=0;
 	int cx,cy;
 	int diffx,diffy;
 	float a,b,f;
@@ -516,6 +576,8 @@ void DebrisCallBack(const nord_messages::DebrisArray debris_array){
 	
 	for (auto& debris : debris_array.data)
 	{
+		cent_x=0;
+		cent_y=0;
 		flag_debris=false;
 		for (size_t i = 0; i <= debris.hull.size() - 1; i++)
 		{
@@ -542,8 +604,8 @@ void DebrisCallBack(const nord_messages::DebrisArray debris_array){
 			if(mx0!=mx1){
 				if(my0!=my1){//diagonal lines 
 					
-					diffx=mx1-mx0;
-					diffy=my1-my0;
+					diffx=std::abs(mx1-mx0);
+					diffy=std::abs(my1-my0);
 					if (diffx>=diffy){//choose the coord varying the most and create a line depending on that one
 						a=(((float) my0)-((float) my1))/(((float) mx0)-((float) mx1));
 						b=((float) my1)-(a*((float) mx1));
@@ -964,28 +1026,32 @@ void DebrisCallBack(const nord_messages::DebrisArray debris_array){
 			{   
 				mx0=(node.x * 100);
 				my0=(node.y * 100);
-				
-				if(map_aux[mx0][my0]!=0){
-					//take node from the graph.... will this skip one node?
-					
-					create_new_nodes();
-					//check if the node was part of the path if it was do a dijkstra from the previous node to next to one if no connection fuck it no connection, check if was multiple times in the path
-					continue;
-				}
-				
 				flag_cut=false;
-				for (auto link : node.get_links()){
-					mx1=link->x*100;
-					my1=link->y*100;
-					
-					if(check_connection(int mx0,int my0,int mx1,int my1)){
-						flag_cut=true;
+				if(map_aux[mx0][my0]!=0){
+					graph.remove(n);// will this skip one node?
+					n--;
+					flag_cut=true;
+				}
+				if(flag_cut==false){
+					auto& all_nodes=graph.get_graph()
+					for (auto link : node.get_links()){
+						mx1=link->x*100;
+						my1=link->y*100;
+						
+						if(check_connection(mx0,my0,mx1,my1)){
+							for (int p=n;p<all_nodes.size();p++){
+								if(all_nodes[p].x==link->x && all_nodes[p].y==link->y ) break;
+							}						
+							
+							graph.disconnect(n, p);
+							flag_cut=true;
+						}
 					}
-					
 				}
 				if(flag_cut==true){
-					//go through planned path if it fucks something change the path with dijkstra...
+					create_new_nodes(debris);
 				}
+				n++;
 			}
 			map_walls=map_debris;
 			map=map_aux;
@@ -1003,6 +1069,7 @@ int main(int argc, char** argv)
 	deb_sub=n.subscribe("nord_estimation/debris",&DebrisCallBack,10,this);
 	
 	load_graph(ros::package::getPath("nord_planning") + "/links2.txt");
+	actual_path = read_path(ros::package::getPath("nord_houston")+"/data/plan.txt");
 	map=read_map(ros::package::getPath("nord_planning") + "/data/contest_rehearsal_maze.txt");
 	
 	ros::spin();
