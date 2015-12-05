@@ -62,7 +62,7 @@ namespace graph
 		}*/
 		
 
-		map=read_map(ros::package::getPath("nord_planning") + "/data/contest_rehearsal_maze.txt");
+		map=read_map(ros::package::getPath("nord_planning") + "/data/small_maze.txt");
 		
 		create_pointmap();
 		
