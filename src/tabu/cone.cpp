@@ -80,16 +80,16 @@ void ConeOfSight::rotateCone(int new_x, int new_y){
 		if(real_rotation > 0){
 			current_direction += M_PI/36.0;
 			real_rotation -= M_PI/36.0;
-			//createCone(); 
+			createCone(); 
 		}
 		else{
 			current_direction -= M_PI/36.0;
 			real_rotation += M_PI/36.0;
-			//createCone();
+			createCone();
 		}		 
 	}
 	current_direction += real_rotation;
-	//createCone();	
+	createCone();	
 }
 
 
@@ -312,9 +312,9 @@ void ConeOfSight::createCone(){
     
 
 
-	for(int temp_x = x_min; temp_x < x_max; ++temp_x){
+	for(int temp_x = x_min; temp_x < x_max; temp_x += 4){
 
-		for(int temp_y= y_min; temp_y < y_max; ++temp_y){
+		for(int temp_y= y_min; temp_y < y_max; temp_y += 4){
 		 	// std::cout << "y = " << temp_y << std::endl;
     		A1 = triangleArea(temp_x, temp_y, right_x, right_y, left_x, left_y);
     		A2 = triangleArea(current_x, current_y, temp_x, temp_y, left_x, left_y);
@@ -324,13 +324,19 @@ void ConeOfSight::createCone(){
     		if(std::fabs(A-(A1 + A2 + A3)) <= acceptable_error){
 	    		point<2> end(temp_x/100.0,temp_y/100.0);
     			line<2> line(start,end);
-    			auto wall_collition = maze->raycast(line);
+    			auto wall_collition = bool(maze->raycast(line));
     			if(!(wall_collition)){ 
-    				explored[to1D(temp_x, temp_y)] = true; 
-    				// else{
-    				// 	explored[temp_x][temp_y] = -0.01;
-    				// }
-    				cone_matrix[to1D(temp_x, temp_y)] = true; // we are seeing this
+    				for (int i = temp_x; i < std::min(temp_x + 4, x_max); i++)
+    				{
+    					for (int j = temp_y; j < std::min(temp_y + 4, y_max); j++)
+    					{
+		    				explored[to1D(i, j)] = true; 
+		    				// else{
+		    				// 	explored[temp_x][temp_y] = -0.01;
+		    				// }
+		    				cone_matrix[to1D(i, j)] = true; // we are seeing this
+    					}
+    				}
     			}
     		}	
     	} 
@@ -379,3 +385,13 @@ void ConeOfSight::changeWidth(float new_width){
 	createCone();
 }
 
+unsigned int ConeOfSight::getNumExplored()
+{
+	unsigned int count = 0;
+	for (size_t i = 0; i < largest_x * largest_y; i++)
+	{
+		if (explored[i])
+			count++;
+	}
+	return count;
+}
