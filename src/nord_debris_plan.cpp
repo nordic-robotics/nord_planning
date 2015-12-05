@@ -1,17 +1,14 @@
-#pragma once
-
 #include "ros/ros.h"
 #include "ros/package.h"
 #include <fstream>
 #include <sstream>
 #include <string>
-#include "graph/graph.hpp"
 #include "nord_messages/Debris.h"
 #include "nord_messages/DebrisArray.h"
 #include <math.h> 
-#include "../dijkstra/path.hpp"      
-#include "../dijkstra/map.hpp" 
-#include "../dijkstra/point.hpp"
+#include "dijkstra/path.hpp"      
+#include "dijkstra/map.hpp" 
+#include "dijkstra/point.hpp"
 
 dijkstra::map graph;
 
@@ -24,13 +21,13 @@ int n_wall=29;
 int clear_debris=11;
 int n_debris=2*clear_debris+1;
 float min_x, min_y, max_x, max_y;
-std::vector<point<2>> actual_path;
+std::vector<dijkstra::point> actual_path;
 
-std::vector<point<2>> read_path(std::string filename)
+std::vector<dijkstra::point> read_path(std::string filename)
 {
     std::ifstream file(filename);
     std::string l;
-    std::vector<point<2>> path;
+    std::vector<dijkstra::point<2>> path;
     while (std::getline(file, l))
     {
         std::istringstream iss(l);
@@ -171,7 +168,7 @@ bool build_map_debris(int cx,int cy,int n){
 	return flag;
 }
 
-std::vector< std::vector<int> > Maps::read_map(std::string filename){
+std::vector< std::vector<int> > read_map(std::string filename){
 	std::ifstream file(filename);
 	std::string l;
 	
@@ -316,7 +313,9 @@ std::vector< std::vector<int> > Maps::read_map(std::string filename){
 
 bool check_connection(int mx0,int my0,int mx1,int my1){
 	bool flag_cut=false;
-	
+	int diffx,diffy;
+	float a,b,f;
+	int fx,fy;
 	if(mx0!=mx1){
 		if(my0!=my1){//diagonal lines 
 			
@@ -429,7 +428,6 @@ bool check_connection(int mx0,int my0,int mx1,int my1){
 	}else{ //just a point not a line
 		if(map_aux[mx0][my0]!=0){
 			flag_cut=true;
-			break;
 		}
 	}
 	return flag_cut;
@@ -440,6 +438,9 @@ bool create_new_nodes(std::vector<nord_messages::Debris> data){
 	bool flag_new=false;
 	int i;
 	int mx0,my0,mx1,my1;
+	int diffx,diffy;
+	float a,b,f;
+	int fx,fy;
 	
 	std::vector< std::vector<int> >  map_debris2=map_debris;
 	size_t num_nodes=graph.get_graph().size();
@@ -520,7 +521,7 @@ bool create_new_nodes(std::vector<nord_messages::Debris> data){
 		}else if(my0!=my1){//line which varies in y
 			fx=mx0;
 			if(my0<my1){
-				fy<=my1+clear_debris+1;
+				fy=my1+clear_debris+1;
 				if(fy < int(max_y*100+1) && map_debris[fx][fy]==0){
 					flag_new=true;
 					graph.add(dijkstra::point(fx/100.0f,fy/100.0f));
@@ -547,8 +548,8 @@ bool create_new_nodes(std::vector<nord_messages::Debris> data){
 			
 			for (size_t j = 0; j < graph.get_graph().size(); j++)
 			{
-				if(i!=j){
-					if(!check_connection(graph.get_graph()[num_nodes].x * 100 ,graph.get_graph()[num_nodes].y * 100, graph.get_graph()[j].x * 100 ,graph.get_graph()[j].y * 100)){//Verify the units 
+				if(num_nodes!=j){
+					if(check_connection(graph.get_graph()[num_nodes].x * 100 ,graph.get_graph()[num_nodes].y * 100, graph.get_graph()[j].x * 100 ,graph.get_graph()[j].y * 100)){//Verify the units 
 						graph.connect(num_nodes, j);//connects both ways RIGHT???
 					}
 				}
@@ -576,8 +577,6 @@ void DebrisCallBack(const nord_messages::DebrisArray debris_array){
 	
 	for (auto& debris : debris_array.data)
 	{
-		cent_x=0;
-		cent_y=0;
 		flag_debris=false;
 		for (size_t i = 0; i <= debris.hull.size() - 1; i++)
 		{
@@ -586,9 +585,9 @@ void DebrisCallBack(const nord_messages::DebrisArray debris_array){
 			map_debris==map_walls;
 			mx0=(int)(debris.hull[i].x*100);
 			my0=(int)(debris.hull[i].y*100);
-			if(i==(debris.hull.size()-1){
+			if(i==(debris.hull.size()-1)){
 				mx1=(int)(debris.hull[0].x*100);
-				my1=(int)(debris.hull[0].y*100)
+				my1=(int)(debris.hull[0].y*100);
 			}else{
 				mx1=(int)(debris.hull[i+1].x*100);
 				my1=(int)(debris.hull[i+1].y*100);
@@ -634,7 +633,7 @@ void DebrisCallBack(const nord_messages::DebrisArray debris_array){
 											flag_debris=true;
 										}
 										if(map_aux[fx][fy-calc]!=0){
-											flag_neg==true;
+											flag_neg=true;
 										}
 									}
 									
@@ -644,31 +643,31 @@ void DebrisCallBack(const nord_messages::DebrisArray debris_array){
 											flag_debris=true;
 										}
 										if(map_aux[fx][fy+calc]!=0){
-											flag_pos==true;
+											flag_pos=true;
 										}
 									}
 									
 									if((ff-calc>=0) && flag_neg2==false){
 										if(map_debris[fx][ff-calc]==0){
 											map_debris[fx][ff-calc]=2;
-											flag_debris2=true;
+											flag_debris=true;
 										}
 										if(map_aux[fx][ff-calc]!=0){
-											flag_neg2==true;
+											flag_neg2=true;
 										}
 									}
 									
 									if( flag_pos2==false && (ff+calc<int(max_y*100+1))){
 										if(map_debris[fx][ff+calc]==0){
 											map_debris[fx][ff+calc]=2;
-											flag_debris2=true;
+											flag_debris=true;
 										}
 										if(map_aux[fx][ff+calc]!=0){
-											flag_pos2==true;
+											flag_pos2=true;
 										}
 									}
 									
-									if(flag_neg==true && flag_pos==true && flag_neg2==true && flag_pos2==true) break;
+									if(flag_neg && flag_pos && flag_neg2 && flag_pos2) break;
 								}
 							}
 						}else{
@@ -713,7 +712,7 @@ void DebrisCallBack(const nord_messages::DebrisArray debris_array){
 									if((ff-calc>=0) && flag_neg2==false){
 										if(map_debris[fx][ff-calc]==0){
 											map_debris[fx][ff-calc]=2;
-											flag_debris2=true;
+											flag_debris=true;
 										}
 										if(map_aux[fx][ff-calc]!=0){
 											flag_neg2==true;
@@ -723,7 +722,7 @@ void DebrisCallBack(const nord_messages::DebrisArray debris_array){
 									if( flag_pos2==false && (ff+calc<int(max_y*100+1))){
 										if(map_debris[fx][ff+calc]==0){
 											map_debris[fx][ff+calc]=2;
-											flag_debris2=true;
+											flag_debris=true;
 										}
 										if(map_aux[fx][ff+calc]!=0){
 											flag_pos2==true;
@@ -780,7 +779,7 @@ void DebrisCallBack(const nord_messages::DebrisArray debris_array){
 									if((ff-calc>=0) && flag_neg2==false){
 										if(map_debris[ff-calc][fy]==0){
 											map_debris[ff-calc][fy]=2;
-											flag_debris2=true;
+											flag_debris=true;
 										}
 										if(map_aux[ff-calc][fy]!=0){
 											flag_neg2==true;
@@ -790,7 +789,7 @@ void DebrisCallBack(const nord_messages::DebrisArray debris_array){
 									if( flag_pos2==false && (ff+calc<int(max_x*100+1))){
 										if(map_debris[ff+calc][fy]==0){
 											map_debris[ff+calc][fy]=2;
-											flag_debris2=true;
+											flag_debris=true;
 										}
 										if(map_aux[ff+calc][fy]!=0){
 											flag_pos2==true;
@@ -843,7 +842,7 @@ void DebrisCallBack(const nord_messages::DebrisArray debris_array){
 									if((ff-calc>=0) && flag_neg2==false){
 										if(map_debris[ff-calc][fy]==0){
 											map_debris[ff-calc][fy]=2;
-											flag_debris2=true;
+											flag_debris=true;
 										}
 										if(map_aux[ff-calc][fy]!=0){
 											flag_neg2==true;
@@ -853,7 +852,7 @@ void DebrisCallBack(const nord_messages::DebrisArray debris_array){
 									if( flag_pos2==false && (ff+calc<int(max_x*100+1))){
 										if(map_debris[ff+calc][fy]==0){
 											map_debris[ff+calc][fy]=2;
-											flag_debris2=true;
+											flag_debris=true;
 										}
 										if(map_aux[ff+calc][fy]!=0){
 											flag_pos2==true;
