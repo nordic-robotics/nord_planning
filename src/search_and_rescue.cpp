@@ -385,7 +385,7 @@ int main(int argc, char** argv)
         return true;
     };
 
-    ros::ServiceServer srv(n.advertiseService("/nord/planning/plan_service",
+    ros::ServiceServer srv(n.advertiseService("/nord_planning/plan_service",
                            &decltype(service)::operator(), &service));
 
     ros::spin();
