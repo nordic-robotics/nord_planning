@@ -3,7 +3,7 @@
 
 namespace graph
 {	
-	Maps::Maps(): pot_wall(n_wall,std::vector<long int> (n_wall)), pot_point(n_point,std::vector<long int> (n_point)){
+	Maps::Maps(bool dijk): dijk(dijk), pot_wall(n_wall,std::vector<long int> (n_wall)), pot_point(n_point,std::vector<long int> (n_point)){
 		
 		//Initiate wall_point potential matrix
 		for(int i=0;i<=(n_wall-1)/2;i+=1){
@@ -294,9 +294,10 @@ namespace graph
 	void Maps::print_info(){
 		int i=0;int j=0;
 		std::ofstream file(ros::package::getPath("nord_planning")+"/Map.txt");
-		std::ofstream file2(ros::package::getPath("nord_planning")+"/Map_pot.txt");
-		std::ofstream file3(ros::package::getPath("nord_planning")+"/links.txt");
 		std::ofstream file1(ros::package::getPath("nord_planning")+"/pot_wall_point.txt");
+		std::ofstream file2(ros::package::getPath("nord_planning")+"/Map_pot.txt");
+		std::ofstream file3(ros::package::getPath("nord_planning")+"/" +(dijk ? "Lucas" : "Tobias") + "_links.txt");
+		
 		ROS_INFO("printing_file");
 		for (i=0;i<int(max_x*100+1);i+=1){
 			for(j=0;j<int(max_y*100+1);j+=1){
@@ -384,7 +385,14 @@ namespace graph
 								//but this time verify also "square" number of points on each side of the line to guarantee
 								//that there are no walls in the way
 								//if(mx==0||my==0|| (mx<=30 && my<=30)){
-								if((mx + my <= 60 || (mx == 0 ) || (my == 0))){
+								int value = 0;
+								if(dijk){
+									value = 160;
+								}
+								else{
+									value = 40;
+								}
+								if((mx + my <= value || (mx == 0 ) || (my == 0))){
 									if (mx>=my){
 										a=(((float) cy)-((float) j))/(((float) cx)-((float) i));
 										b=((float) j)-(a*((float) i));

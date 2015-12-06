@@ -40,7 +40,7 @@ class ConeOfSight{
     public:
         
         bool point_cap;
-        ConeOfSight(map* maze,int start_x, int start_y, std::valarray<bool> walls);
+        ConeOfSight(map* maze,int start_x, int start_y, std::valarray<bool> walls, const std::valarray<bool>& node_exists);
 
         void changeWidth(float new_width);
         void createCone();
@@ -52,14 +52,16 @@ class ConeOfSight{
         double triangleArea(int x1, int y1, int x2, int y2, int x3, int y3);
         const double get_time()const{return(time_rotating+time_moving);};  
 
+        const bool check_if_node_is_explored(int i)const{return explored_nodes[i];}
+        const bool check_if_node(int i)const{return node_exists[i];}
         const std::valarray<bool>& getCone() const{ return cone_matrix;};
         const std::valarray<bool>& getExplored() const{ return explored;};
         unsigned int getNumExplored();
         const Position getPosition() const;
         const std::vector<Position>& get_path()const{return path;};
         // const double& get_time()const {return total_time;};
-        const int& get_x_max()const{return largest_x;};
-        const int& get_y_max()const{return largest_y;};
+        const uint& get_x_max()const{return largest_x;};
+        const uint& get_y_max()const{return largest_y;};
         // const Position& get_end_pos()const{return end_position}
 
         void pre_compute();
@@ -78,11 +80,13 @@ class ConeOfSight{
         double cone_angle;
         int current_x; int current_y; double current_direction;
         int x_next; int y_next;
-        int largest_x; int largest_y;
+        uint largest_x; uint largest_y;
         std::vector<Position> path;
         std::valarray<bool> cone_matrix;
         std::valarray<bool> walls;
         std::valarray<bool> explored;
+        std::valarray<bool> explored_nodes;
+        std::valarray<bool> node_exists;
         int corners_found = 0; int wall_found = 0;
         double time_moving; double time_rotating;
         int start_x; int start_y;

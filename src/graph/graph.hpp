@@ -12,8 +12,8 @@ namespace graph
 {
 	class Maps{
 	public:
-		int n_wall=29;int n_point=19;
-		Maps();
+		int n_wall=29;int n_point=15;
+		Maps(bool dijk);
 		std::vector< std::vector<int> > read_map(std::string filename);
 		void create_pointmap();
 		void create_pot_map();
@@ -28,7 +28,7 @@ namespace graph
 		int num_points;
 		dijkstra::map m;
 		std::vector<dijkstra::point> graph;
-
+		bool dijk;
 		void add_pot(int cx, int cy,std::vector< std::vector<long int> > pot,int n);
 		void remove_pot(int cx, int cy,std::vector< std::vector<long int> > pot,int n);
 		std::vector<int> next_place(int fx, int fy, int step);

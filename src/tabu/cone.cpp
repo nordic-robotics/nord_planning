@@ -5,18 +5,19 @@ size_t ConeOfSight::to1D(size_t x, size_t y) const {
 }
 
 //from here ill get start position and link to all nodes
-ConeOfSight::ConeOfSight(map* maze,int start_x,int start_y, std::valarray<bool> walls)
-	: walls(walls){
+ConeOfSight::ConeOfSight(map* maze,int start_x,int start_y, std::valarray<bool> walls, const std::valarray<bool>& node_exists)
+	: walls(walls), node_exists(node_exists){
 
 	cone_angle = M_PI/6.0; //30 deg
 	current_direction = 0;
 	this->maze = maze;
-	float temp_x = maze->get_max_x(); 
-	float temp_y = maze->get_max_y();
-	largest_y = temp_y*100; 	current_x = start_x;
-	largest_x = temp_x*100;	    current_y = start_y;
+	largest_y = maze->get_max_y()*100; 	current_x = start_x;
+	largest_x = maze->get_max_x()*100;	    current_y = start_y;
+	std::cout << largest_x << ", " << largest_y << std::endl;
 	explored = std::valarray<bool>(false, largest_x * largest_y);
-	int start_area = 40;
+	explored_nodes = std::valarray<bool>(false, largest_x * largest_y);
+	explored_nodes[to1D(20,20)] = true;
+	int start_area = 20;
 	for (int x = -start_area; x < start_area; x++)
 	{
 		for (int y = -start_area; y < start_area; y++)
@@ -37,20 +38,7 @@ ConeOfSight::ConeOfSight(map* maze,int start_x,int start_y, std::valarray<bool> 
 	createCone();
 }
 
-/*ConeOfSight::ConeOfSight(ConeOfSight const& cone){
-	cone_angle = M_PI/6;
-	current_direction = cone.current_direction;
-	explored = cone.explored;
-	time_moving = cone.time_moving; time_rotating = cone.time_rotating;
-	path = cone.path;
-	current_x = cone.current_x; current_y = cone.current_y;
-	cone_matrix = cone.cone_matrix;
-	point_cap = cone.point_cap;
-	largest_x = cone.largest_x; largest_y = cone.largest_y;
-	this->maze = cone.maze;
-	walls = cone.walls;
-	// std::cout << "no problem" << std::endl;
-}*/
+
 
 void ConeOfSight::add_to_path(Position pos){
 	path.push_back(pos);
@@ -73,23 +61,28 @@ void ConeOfSight::rotateCone(int new_x, int new_y){
 	double angle_diff = rotation-current_direction;
 	double real_rotation = std::atan2(std::sin(angle_diff), std::cos(angle_diff));
 	//std::cout << "real_rotation = " << real_rotation*180/M_PI <<std::endl;
-
-	time_rotating += 0.2 + real_rotation * 1/M_PI;
+	if(real_rotation <= std::fabs(M_PI/2.0)){
+	// time_rotating += 0.2 + real_rotation * 1/M_PI;
 	//std::cout << "time_rotating = " << 0.2 + real_rotation * 1/M_PI << std::endl; 
-	while(std::fabs(real_rotation) > (M_PI/36.0)){ //coresponds to 5 degrees
-		if(real_rotation > 0){
-			current_direction += M_PI/36.0;
-			real_rotation -= M_PI/36.0;
-			createCone(); 
+		while(std::fabs(real_rotation) > (M_PI/36.0)){ //coresponds to 5 degrees
+			if(real_rotation > 0){
+				current_direction += M_PI/36.0;
+				real_rotation -= M_PI/36.0;
+				createCone(); 
+			}
+			else{
+				current_direction -= M_PI/36.0;
+				real_rotation += M_PI/36.0;
+				createCone();
+			}		 
 		}
-		else{
-			current_direction -= M_PI/36.0;
-			real_rotation += M_PI/36.0;
-			createCone();
-		}		 
+		current_direction += real_rotation;
+		createCone();
 	}
-	current_direction += real_rotation;
-	createCone();	
+	else{
+		current_direction += real_rotation;
+	}	
+	
 }
 
 
@@ -98,7 +91,7 @@ void ConeOfSight::moveCone(int new_x, int new_y){
 	// std::cout << "moving cone" << std::endl;
 	if(current_x == new_x){
 		// std::cout << "going straight in y direction" << std::endl;
-		while(current_y != new_y){
+		while(!(current_y == new_y)){
 			if(new_y > current_y){
 				++current_y;
 			}
@@ -111,7 +104,7 @@ void ConeOfSight::moveCone(int new_x, int new_y){
 	}	
 	else if(current_y == new_y){
 		// std::cout << "going straigh in x direction" << std::endl;
-		while(current_x != new_x){
+		while(!(current_x == new_x)){
 			if(new_x > current_x){
 				++current_x;
 			}
@@ -249,6 +242,14 @@ void ConeOfSight::moveCone(int new_x, int new_y){
 			// std::cout <<"made it without any problem" << std::endl;
 		}
 	}
+	if(!(current_x == new_x)){
+		current_x = new_x;
+		createCone();
+	}
+	if(!(current_y == new_y)){
+		current_y = new_y;
+		createCone();
+	}
 	// std::cout << "move complete" << std::endl;	 
 }
 
@@ -312,9 +313,9 @@ void ConeOfSight::createCone(){
     
 
 
-	for(int temp_x = x_min; temp_x < x_max; temp_x += 4){
+	for(int temp_x = x_min; temp_x < x_max; ++temp_x){
 
-		for(int temp_y= y_min; temp_y < y_max; temp_y += 4){
+		for(int temp_y= y_min; temp_y < y_max; ++temp_y){
 		 	// std::cout << "y = " << temp_y << std::endl;
     		A1 = triangleArea(temp_x, temp_y, right_x, right_y, left_x, left_y);
     		A2 = triangleArea(current_x, current_y, temp_x, temp_y, left_x, left_y);
@@ -326,17 +327,18 @@ void ConeOfSight::createCone(){
     			line<2> line(start,end);
     			auto wall_collition = bool(maze->raycast(line));
     			if(!(wall_collition)){ 
-    				for (int i = temp_x; i < std::min(temp_x + 4, x_max); i++)
-    				{
-    					for (int j = temp_y; j < std::min(temp_y + 4, y_max); j++)
-    					{
-		    				explored[to1D(i, j)] = true; 
-		    				// else{
-		    				// 	explored[temp_x][temp_y] = -0.01;
-		    				// }
-		    				cone_matrix[to1D(i, j)] = true; // we are seeing this
-    					}
-    				}
+    				// for (int i = temp_x; i < std::min(temp_x + 1, x_max); i++)
+    				// {
+    				// 	for (int j = temp_y; j < std::min(temp_y + 1, y_max); j++)
+    				// 	{
+    				explored[to1D(temp_x, temp_y)] = true; 
+    				cone_matrix[to1D(temp_x, temp_y)] = true; // we are seeing this
+    				// if(node_exists[to1D(temp_x,temp_y)] == true){
+    					explored_nodes[to1D(temp_x,temp_y)] = true;
+
+		    			// 	}
+    					// }
+    				// }
     			}
     		}	
     	} 
