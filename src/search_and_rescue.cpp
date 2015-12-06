@@ -371,16 +371,27 @@ int main(int argc, char** argv)
                        nord_messages::PlanSrv::Response& res) mutable {
         auto start = find_closest(req.start);
         auto end = find_closest(req.end);
-        auto result = tabu::search<dijkstra::path>(10000, 1000,
-                                                   fitness(end),
-                                                   random_path(start),
-                                                   neighbours(start));
-        std::transform(result.second.begin(), result.second.end(),
-                       std::back_inserter(res.path), conversion);
+        if (!req.direct)
+        {
+            auto result = tabu::search<dijkstra::path>(10000, 1000,
+                                                       fitness(end),
+                                                       random_path(start),
+                                                       neighbours(start));
+            std::transform(result.second.begin(), result.second.end(),
+                           std::back_inserter(res.path), conversion);
 
-        auto leftovers = graph.find(*result.second.back(), *end);
-        std::transform(leftovers.begin(), leftovers.end(),
-                       std::back_inserter(res.path), conversion);
+            auto leftovers = graph.find(*result.second.back(), *end);
+            std::transform(leftovers.begin(), leftovers.end(),
+                           std::back_inserter(res.path), conversion);
+            res.time = path_time(result.second) + path_time(leftovers);
+        }
+        else
+        {
+            auto dijkstra_path = graph.find(*start, *end);
+            std::transform(dijkstra_path.begin(), dijkstra_path.end(),
+                           std::back_inserter(res.path), conversion);
+            res.time = path_time(dijkstra_path);
+        }
 
         return true;
     };
