@@ -4,23 +4,6 @@
  
 namespace dijkstra
 {
-    class priority_compare
-    {
-    public:
-        bool operator()(const std::pair<point const*, float>& a,
-                        const std::pair<point const*, float>& b)
-        {
-            if (a.second < b.second)
-                return true;
-            if (b.second < a.second)
-                return false;
- 
-            if (a.first < b.first)
-                return true;
-            return false;
-        }
-    };
- 
     void map::connect(unsigned int a, unsigned int b)
     {
         graph[a].connect(&graph[b]);
@@ -126,7 +109,7 @@ namespace dijkstra
     {
         std::set<std::pair<point const*, float>, priority_compare> output;
         std::transform(graph.begin(), graph.end(), std::back_inserter(output),
-            [&](const point const* p) {
+            [&](point const* p) {
                 return std::make_pair(p, p_approx.distance(p));
         });
 

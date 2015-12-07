@@ -342,9 +342,10 @@ namespace graph
 			}
 			file3<<"\n";
 		}
-		if(!dijk){
+
+		if(!dijk)
 			file3 << "%";
-		}
+
 	}
 	
 	dijkstra::map* Maps::create_graph(){
@@ -394,13 +395,13 @@ namespace graph
 								else{
 									value = 30;
 								}
-								if((mx + my <= value || (mx == 0 ) || (my == 0))){
+								if((mx + my <= value || (mx == 0 ) || (my == 0)) || true){
 									if (mx>=my){
 										a=(((float) cy)-((float) j))/(((float) cx)-((float) i));
 										b=((float) j)-(a*((float) i));
 										if(cx>i){
 											for(fx=i;fx<=cx;fx+=1){
-												calc=(int) (a*fx+b);
+												calc=std::lround( (a*fx+b));
 												for(fy=calc-square;fy<=calc+square;fy+=1){
 													if((fy>=0) && (fy<int(max_y*100+1))){
 														if(map[fx][fy]==1){
@@ -415,7 +416,7 @@ namespace graph
 											}
 										}else{
 											for(fx=cx;fx<=i;fx+=1){
-												calc=(int) (a*fx+b);
+												calc=std::lround( (a*fx+b));
 												for(fy=calc-square;fy<=calc+square;fy+=1){
 													if((fy>=0) && (fy<int(max_y*100+1))){
 														if(map[fx][fy]==1){
@@ -435,7 +436,7 @@ namespace graph
 										b=((float) i)-(a*((float) j));
 										if(cy>j){
 											for(fy=j;fy<=cy;fy+=1){
-												calc=(int) (a*fy+b);
+												calc=std::lround( (a*fy+b));
 												for(fx=calc-square;fx<=calc+square;fx+=1){
 													if((fx>=0) && (fx<int(max_x*100+1))){
 														if(map[fx][fy]==1){
@@ -450,7 +451,7 @@ namespace graph
 											}
 										}else{
 											for(fy=cy;fy<=j;fy+=1){
-												calc=(int) (a*fy+b);
+												calc=std::lround( (a*fy+b));
 												for(fx=calc-square;fx<=calc+square;fx+=1){
 													if((fx>=0) && (fx<int(max_x*100+1))){
 														if(map[fx][fy]==1){

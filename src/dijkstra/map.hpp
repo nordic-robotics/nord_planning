@@ -2,6 +2,7 @@
  
 #include <unordered_map>
 #include <vector>
+#include <set>
 #include <algorithm>
 #include <cmath>
 #include "point.hpp"
@@ -21,6 +22,23 @@ namespace std {
  
 namespace dijkstra
 {
+    class priority_compare
+    {
+    public:
+        bool operator()(const std::pair<point const*, float>& a,
+                        const std::pair<point const*, float>& b)
+        {
+            if (a.second < b.second)
+                return true;
+            if (b.second < a.second)
+                return false;
+ 
+            if (a.first < b.first)
+                return true;
+            return false;
+        }
+    };
+
     class map
     {
     public:
@@ -46,7 +64,7 @@ namespace dijkstra
         map(const map& other) = delete;
  
     private:
-        point const* closest(const point& p_approx);
+        std::set<std::pair<point const*, float>, priority_compare> closest(const point& p_approx);
         void explore(point const* start, std::vector<point const*> goals);
         void insert_all(const std::unordered_map<point const*, float>& visited,
                         const std::unordered_map<point const*, point const*>& previous);
