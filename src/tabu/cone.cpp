@@ -5,22 +5,24 @@ size_t ConeOfSight::to1D(size_t x, size_t y) const {
 }
 
 //from here ill get start position and link to all nodes
-ConeOfSight::ConeOfSight(map* maze,int start_x,int start_y, std::valarray<bool> walls, const std::valarray<bool>& node_exists)
-	: walls(walls), node_exists(node_exists){
-
+ConeOfSight::ConeOfSight(map* maze, int start_x,int start_y, std::valarray<bool> walls, 
+	const std::valarray<bool>& node_exists): start_x(start_x),start_y(start_y){
+	// : walls(walls), node_exists(node_exists){
+// 
 	cone_angle = M_PI/6.0; //30 deg
 	current_direction = 0;
 	this->maze = maze;
 	largest_y = maze->get_max_y()*100; 	current_x = start_x;
-	largest_x = maze->get_max_x()*100;	    current_y = start_y;
+	largest_x = maze->get_max_x()*100;	current_y = start_y;
 	std::cout << largest_x << ", " << largest_y << std::endl;
 	explored = std::valarray<bool>(false, largest_x * largest_y);
 	explored_nodes = std::valarray<bool>(false, largest_x * largest_y);
-	explored_nodes[to1D(20,20)] = true;
-	int start_area = 20;
-	for (int x = -start_area; x < start_area; x++)
+	// explored_nodes[to1D(20,20)] = true;
+	int start_areax = 50;
+	int start_areay = 30;
+	for (int x = -start_areax; x < start_areax; x++)
 	{
-		for (int y = -start_area; y < start_area; y++)
+		for (int y = -start_areay; y < start_areay; y++)
 		{
 			if (start_x + x >= 0 && start_y + y >= 0)
 				explored[to1D(start_x + x, start_y + y)] = true;
@@ -28,15 +30,14 @@ ConeOfSight::ConeOfSight(map* maze,int start_x,int start_y, std::valarray<bool> 
 	}
 	std::cout << "uh?" << std::endl;
 	time_moving = 0; time_rotating = 0;
-	start_x = current_x;
-	start_y = current_y;
 	path.clear();
 	
 	Position init(start_x, start_y); 
-	point_cap =false;
+	move_ok =true;
 	add_to_path(init);
 	createCone();
 }
+
 
 
 
@@ -49,6 +50,40 @@ void ConeOfSight::resetExplored(){
 	explored = std::valarray<bool>(false, largest_x * largest_y);
 }
 
+void ConeOfSight::rotateConeOtherWay(int new_x, int new_y){
+	int dx = new_x - current_x; 
+	int dy = new_y - current_y;
+	double rotation = std::atan2(dy,dx);
+	double angle_diff = rotation-current_direction;
+	double real_rotation = std::atan2(std::sin(angle_diff), std::cos(angle_diff));
+	// std::cout << "real_rotation = " << real_rotation*180/M_PI <<std::endl;
+	double inverse_rotation = 0;
+	if(real_rotation >= 0){
+		inverse_rotation = -(2*M_PI - real_rotation);
+	}
+	else{
+		inverse_rotation = (2*M_PI + real_rotation);
+	}
+	// std::cout << "inverse_rotation = " << inverse_rotation*180/M_PI << std::endl;
+	while(std::fabs(inverse_rotation) > (M_PI/36.0)){
+		if(inverse_rotation >= 0){
+			// std::cout << "inverse_rotation >= 0  = " << inverse_rotation << std::endl;
+			current_direction += M_PI/36.0;
+			inverse_rotation -= M_PI/36.0;
+			createCone(); 
+		}
+		else{
+			// std::cout << "inverse_rotation < 0 =  " << inverse_rotation << std::endl;
+			current_direction -= M_PI/36.0;
+			inverse_rotation += M_PI/36.0;
+			// std::cout << "current_direction  =  " << current_direction << std::endl;
+			createCone();
+		}		 
+	}
+	current_direction += inverse_rotation;
+	createCone();
+
+}
 //itteratative rotation
 void ConeOfSight::rotateCone(int new_x, int new_y){
 	//ROS_INFO("rotation = %f", rotation);
@@ -61,194 +96,197 @@ void ConeOfSight::rotateCone(int new_x, int new_y){
 	double angle_diff = rotation-current_direction;
 	double real_rotation = std::atan2(std::sin(angle_diff), std::cos(angle_diff));
 	//std::cout << "real_rotation = " << real_rotation*180/M_PI <<std::endl;
-	if(real_rotation <= std::fabs(M_PI/2.0)){
-	// time_rotating += 0.2 + real_rotation * 1/M_PI;
-	//std::cout << "time_rotating = " << 0.2 + real_rotation * 1/M_PI << std::endl; 
-		while(std::fabs(real_rotation) > (M_PI/36.0)){ //coresponds to 5 degrees
-			if(real_rotation > 0){
-				current_direction += M_PI/36.0;
-				real_rotation -= M_PI/36.0;
-				createCone(); 
-			}
-			else{
-				current_direction -= M_PI/36.0;
-				real_rotation += M_PI/36.0;
-				createCone();
-			}		 
+	//Try  instead depending on the nodes
+	// //
+
+	time_rotating += 0.2 + real_rotation * 1/M_PI;
+	// std::cout << "time_rotating = " << 0.2 + real_rotation * 1/M_PI << std::endl; 
+	while(std::fabs(real_rotation) > (M_PI/36.0)){ //coresponds to 5 degrees
+		if(real_rotation > 0){
+			current_direction += M_PI/36.0;
+			real_rotation -= M_PI/36.0;
+			createCone(); 
 		}
-		current_direction += real_rotation;
-		createCone();
+		else{
+			current_direction -= M_PI/36.0;
+			real_rotation += M_PI/36.0;
+			createCone();
+		}		 
 	}
-	else{
-		current_direction += real_rotation;
-	}	
-	
+	current_direction += real_rotation;
+	createCone();
+
 }
 
 
 //move the cone from point 1 to point 2
 void ConeOfSight::moveCone(int new_x, int new_y){
 	// std::cout << "moving cone" << std::endl;
-	if(current_x == new_x){
-		// std::cout << "going straight in y direction" << std::endl;
-		while(!(current_y == new_y)){
-			if(new_y > current_y){
-				++current_y;
+
+	if(move_ok){
+
+
+		if(current_x == new_x){
+			// std::cout << "going straight in y direction" << std::endl;
+			while(!(current_y == new_y)){
+				if(new_y > current_y){
+					++current_y;
+				}
+				else{
+					--current_y;
+				}
+				createCone();
 			}
-			else{
-				--current_y;
+			
+		}	
+		else if(current_y == new_y){
+			// std::cout << "going straigh in x direction" << std::endl;
+			while(!(current_x == new_x)){
+				if(new_x > current_x){
+					++current_x;
+				}
+				else{
+					--current_x;
+				}
+				createCone();
 			}
+			// std::cout <<"made it without any problem" << std::endl;
+		}
+
+		double dx = new_x - current_x;
+		double dy = new_y - current_y;
+		double k = dy/dx;
+		double m = current_y - k * current_x;
+
+		time_moving += 0.2 + std::sqrt(std::pow(dy,2)+ std::pow(dx,2))*1/35;
+		//std::cout << " distance moved = " <<  std::sqrt(std::pow(dy,2)+ std::pow(dx,2)) << std::endl;
+		//std::cout << "time moving = " << 0.2 + std::sqrt(std::pow(dy,2)+ std::pow(dx,2))*1/35 << std::endl;
+		//will move cone in a straigth line from node(n) -> node(n+1)
+		while(!(current_x == new_x && current_y == new_y)){
+
+			//------------------------------------------------
+			if(dx > 0 && dy > 0){
+				// std::cout << "both postive" << std::endl;
+				if(dx < dy){
+					++current_y;
+					current_x = floor((current_y-m)/k);
+					if(current_y == new_y && current_x != new_x){
+						// std::cout << "Cheat amount = " << current_x - new_x << std::endl;
+						// std::cout << "Cheat activated" << std::endl;
+						current_x = new_x;
+					} 
+					createCone();
+				}
+				else if(dy < dx){
+					++current_x;
+					current_y = floor(k*current_x + m);
+					if(current_x == new_x && current_y != new_y){
+						// std::cout << "Cheat activated" << std::endl;
+						// std::cout << "Cheat amount = " << current_y - new_y << std::endl;
+						current_y = new_y;
+					} 
+					createCone(); 
+				}
+				else{
+					++current_x;
+					++current_y;
+					createCone();
+				}
+				// std::cout <<"made it without any problem" << std::endl;
+			}
+			//-----------------------------------------------
+			else if(dx < 0 && dy < 0){
+				// std::cout << "both negative" << std::endl;
+				if(dx > dy){
+					--current_y;
+					current_x = floor((current_y-m)/k);
+					if(current_y == new_y && current_x != new_x){
+						current_x = new_x;
+					} 
+					createCone();
+				}
+				else if(dy > dx){
+					--current_x;
+					current_y = floor(k*current_x + m);
+					if(current_x == new_x && current_y != new_y){
+						current_y = new_y;
+					}  
+					createCone();
+				}
+				else{
+					--current_x;
+					--current_y;
+					createCone();
+				}
+				// std::cout <<"made it without any problem" << std::endl;
+			}
+			// ----------------------------------------------
+			else if(dx < 0 && dy>0){
+				// std::cout <<" dx< 0 && dy > 0" << std::endl;
+				if(std::abs(dx) < dy){
+					++current_y;
+					current_x = floor((current_y-m)/k);
+					createCone();
+					if(current_y == new_y && current_x != new_x){
+						current_x = new_x;
+					} 
+				}
+				else if(dy < std::abs(dx)){
+					
+					--current_x;
+					current_y = floor(k*current_x + m);
+
+					if(current_x == new_x && current_y != new_y){
+						current_y = new_y;
+					} 
+
+					createCone(); 
+				}
+				else{
+					--current_x;
+					++current_y;
+					createCone();
+				}
+				// std::cout <<"made it without any problem" << std::endl;
+			}
+			//------------------------------------------------
+			else if(dx > 0 && dy < 0){
+				//std::cout <<"dx > 0 && dy < 0" << std::endl;
+				if(dx < abs(dy)){
+					//std::cout << " abs dy > dx" << std::endl;
+					--current_y;
+					current_x = floor((current_y-m)/k);
+					if(current_y == new_y && current_x != new_x){
+						current_x = new_x;
+					} 
+					createCone();
+				}
+				else if(abs(dy) < dx){
+					// std::cout << " abs dy < dx" << std::endl;
+					++current_x;
+					current_y = floor((k*current_x + m));
+					if(current_x == new_x && current_y != new_y){
+						current_y = new_y;
+					} 
+					createCone(); 
+				}
+				else{
+					// std::cout << " abs dy == dx" << std::endl;
+					++current_x;
+					--current_y;
+					createCone();
+				}
+				// std::cout <<"made it without any problem" << std::endl;
+			}
+		}
+		if(!(current_x == new_x)){
+			current_x = new_x;
 			createCone();
 		}
-		
-	}	
-	else if(current_y == new_y){
-		// std::cout << "going straigh in x direction" << std::endl;
-		while(!(current_x == new_x)){
-			if(new_x > current_x){
-				++current_x;
-			}
-			else{
-				--current_x;
-			}
+		if(!(current_y == new_y)){
+			current_y = new_y;
 			createCone();
 		}
-		// std::cout <<"made it without any problem" << std::endl;
-	}
-
-	double dx = new_x - current_x;
-	double dy = new_y - current_y;
-	double k = dy/dx;
-	double m = current_y - k * current_x;
-
-	time_moving += 0.2 + std::sqrt(std::pow(dy,2)+ std::pow(dx,2))*1/35;
-	//std::cout << " distance moved = " <<  std::sqrt(std::pow(dy,2)+ std::pow(dx,2)) << std::endl;
-	//std::cout << "time moving = " << 0.2 + std::sqrt(std::pow(dy,2)+ std::pow(dx,2))*1/35 << std::endl;
-	//will move cone in a straigth line from node(n) -> node(n+1)
-	while(!(current_x == new_x && current_y == new_y)){
-
-		//------------------------------------------------
-		if(dx > 0 && dy > 0){
-			// std::cout << "both postive" << std::endl;
-			if(dx < dy){
-				++current_y;
-				current_x = floor((current_y-m)/k);
-				if(current_y == new_y && current_x != new_x){
-					// std::cout << "Cheat amount = " << current_x - new_x << std::endl;
-					// std::cout << "Cheat activated" << std::endl;
-					current_x = new_x;
-				} 
-				createCone();
-			}
-			else if(dy < dx){
-				++current_x;
-				current_y = floor(k*current_x + m);
-				if(current_x == new_x && current_y != new_y){
-					// std::cout << "Cheat activated" << std::endl;
-					// std::cout << "Cheat amount = " << current_y - new_y << std::endl;
-					current_y = new_y;
-				} 
-				createCone(); 
-			}
-			else{
-				++current_x;
-				++current_y;
-				createCone();
-			}
-			// std::cout <<"made it without any problem" << std::endl;
-		}
-		//-----------------------------------------------
-		else if(dx < 0 && dy < 0){
-			// std::cout << "both negative" << std::endl;
-			if(dx > dy){
-				--current_y;
-				current_x = floor((current_y-m)/k);
-				if(current_y == new_y && current_x != new_x){
-					current_x = new_x;
-				} 
-				createCone();
-			}
-			else if(dy > dx){
-				--current_x;
-				current_y = floor(k*current_x + m);
-				if(current_x == new_x && current_y != new_y){
-					current_y = new_y;
-				}  
-				createCone();
-			}
-			else{
-				--current_x;
-				--current_y;
-				createCone();
-			}
-			// std::cout <<"made it without any problem" << std::endl;
-		}
-		// ----------------------------------------------
-		else if(dx < 0 && dy>0){
-			// std::cout <<" dx< 0 && dy > 0" << std::endl;
-			if(std::abs(dx) < dy){
-				++current_y;
-				current_x = floor((current_y-m)/k);
-				createCone();
-				if(current_y == new_y && current_x != new_x){
-					current_x = new_x;
-				} 
-			}
-			else if(dy < std::abs(dx)){
-				
-				--current_x;
-				current_y = floor(k*current_x + m);
-
-				if(current_x == new_x && current_y != new_y){
-					current_y = new_y;
-				} 
-
-				createCone(); 
-			}
-			else{
-				--current_x;
-				++current_y;
-				createCone();
-			}
-			// std::cout <<"made it without any problem" << std::endl;
-		}
-		//------------------------------------------------
-		else if(dx > 0 && dy < 0){
-			//std::cout <<"dx > 0 && dy < 0" << std::endl;
-			if(dx < abs(dy)){
-				//std::cout << " abs dy > dx" << std::endl;
-				--current_y;
-				current_x = floor((current_y-m)/k);
-				if(current_y == new_y && current_x != new_x){
-					current_x = new_x;
-				} 
-				createCone();
-			}
-			else if(abs(dy) < dx){
-				// std::cout << " abs dy < dx" << std::endl;
-				++current_x;
-				current_y = floor((k*current_x + m));
-				if(current_x == new_x && current_y != new_y){
-					current_y = new_y;
-				} 
-				createCone(); 
-			}
-			else{
-				// std::cout << " abs dy == dx" << std::endl;
-				++current_x;
-				--current_y;
-				createCone();
-			}
-			// std::cout <<"made it without any problem" << std::endl;
-		}
-	}
-	if(!(current_x == new_x)){
-		current_x = new_x;
-		createCone();
-	}
-	if(!(current_y == new_y)){
-		current_y = new_y;
-		createCone();
 	}
 	// std::cout << "move complete" << std::endl;	 
 }
@@ -334,7 +372,7 @@ void ConeOfSight::createCone(){
     				explored[to1D(temp_x, temp_y)] = true; 
     				cone_matrix[to1D(temp_x, temp_y)] = true; // we are seeing this
     				// if(node_exists[to1D(temp_x,temp_y)] == true){
-    					explored_nodes[to1D(temp_x,temp_y)] = true;
+					// explored_nodes[to1D(temp_x,temp_y)] = true;
 
 		    			// 	}
     					// }

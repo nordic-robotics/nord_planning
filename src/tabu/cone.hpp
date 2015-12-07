@@ -39,12 +39,13 @@ struct Position{
 class ConeOfSight{
     public:
         
-        bool point_cap;
+        bool move_ok;
         ConeOfSight(map* maze,int start_x, int start_y, std::valarray<bool> walls, const std::valarray<bool>& node_exists);
 
         void changeWidth(float new_width);
         void createCone();
         void rotateCone(int new_x, int new_y);
+        void rotateConeOtherWay(int new_x, int new_y);
         void moveCone(int new_x, int new_y);
         void resetExplored();
         void add_to_path(Position pos);
