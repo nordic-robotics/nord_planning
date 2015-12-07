@@ -763,7 +763,7 @@ std::vector<std::vector<std::vector<Position>>> post_process_nodes(std::string f
 
 
     //Printing shit to textfile
-    std::ofstream file1(ros::package::getPath("nord_planning")+"/Tobias_links2.txt");
+    std::ofstream file1(ros::package::getPath("nord_planning")+"/Tobias_links3.txt");
    for (int i = 0; i < x_max; ++i)
     {
         for (int j = 0; j < y_max; ++j)
@@ -874,13 +874,9 @@ int main(int argc, char** argv)
     // std::vector<std::vector<std::vector<Position>>> node_vector = read_nodes(ros::package::getPath("nord_planning") + "/links.txt", maze.get_max_x(), maze.get_max_y());
     std::valarray<bool> walls = read_walls(ros::package::getPath("nord_planning") + "/Map.txt",maze.get_max_x()*100, maze.get_max_y()*100);
     dijkstra::map minimum_path;
-    auto node_vector = post_process_nodes(ros::package::getPath("nord_planning") + "/Tobias_links.txt", maze.get_max_x(), maze.get_max_y());
+    auto node_vector = post_process_nodes(ros::package::getPath("nord_planning") + "/Tobias_links2.txt", maze.get_max_x(), maze.get_max_y());
     
-
-
-
-
-    load_graph(ros::package::getPath("nord_planning") + "/Tobias_links2.txt", minimum_path);
+    load_graph(ros::package::getPath("nord_planning") + "/Tobias_links3.txt", minimum_path);
     
     
 
@@ -934,11 +930,10 @@ int main(int argc, char** argv)
                         for(size_t k = 1; k < new_path.size(); ++k)
                         {   
                             temp_cone = current;
-                            d.sleep();
 
                             //testing which rotation explores most
                             current.rotateCone(lround(new_path[k]->x*100),lround(new_path[k]->y*100));
-                            std::cout << "ska till = " << lround(new_path[k]->x*100) << "," << lround(new_path[k]->y*100) << std::endl;
+                            std::cout << "moving to = " << lround(new_path[k]->x*100) << "," << lround(new_path[k]->y*100) << std::endl;
                             temp_cone.rotateConeOtherWay(lround(new_path[k]->x*100),lround(new_path[k]->y*100));
                             if(temp_cone.getNumExplored() > (current.getNumExplored()+150)){
                                 current = temp_cone;
@@ -960,6 +955,7 @@ int main(int argc, char** argv)
                             Position pos(lround(new_path[k]->x*100), lround(new_path[k]->y*100));
                             current.add_to_path(pos);
                            
+                            d.sleep();
                         }
 
                     }
