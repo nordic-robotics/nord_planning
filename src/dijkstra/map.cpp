@@ -109,7 +109,7 @@ namespace dijkstra
     {
         std::set<std::pair<point const*, float>, priority_compare> output;
         std::transform(graph.begin(), graph.end(), std::back_inserter(output),
-            [&](point const* p) {
+            [&](point const* p) -> std::pair<point const*, float>{
                 return std::make_pair(p, p_approx.distance(p));
         });
 
