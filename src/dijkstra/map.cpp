@@ -4,6 +4,23 @@
  
 namespace dijkstra
 {
+    class priority_compare
+    {
+    public:
+        bool operator()(const std::pair<point const*, float>& a,
+                        const std::pair<point const*, float>& b)
+        {
+            if (a.second < b.second)
+                return true;
+            if (b.second < a.second)
+                return false;
+ 
+            if (a.first < b.first)
+                return true;
+            return false;
+        }
+    };
+
     void map::connect(unsigned int a, unsigned int b)
     {
         graph[a].connect(&graph[b]);
@@ -74,7 +91,7 @@ namespace dijkstra
  
     const std::vector<point>& map::get_graph() const { return graph; }
  
-    path& map::find(const point& start_approx, const point& goal_approx)
+    const path& map::find(const point& start_approx, const point& goal_approx)
     {
         auto start_set = closest(start_approx);
         auto goal_set = closest(goal_approx);
@@ -94,7 +111,7 @@ namespace dijkstra
             explore(*s_it, {*g_it});
      
             // entry should now exist
-            auto path = paths[std::make_pair(*s_it, *g_it)];
+            auto& path = paths[std::make_pair(*s_it, *g_it)];
             if (path.size() != 0)
                 return path;
             ++s_it;
@@ -104,17 +121,28 @@ namespace dijkstra
         return paths[std::make_pair(start_set.front(), goal_set.front())];
     }
  
-    std::set<std::pair<point const*, float>, priority_compare>
-    map::closest(const point& p_approx)
+    std::vector<point const*> map::closest(const point& p_approx)
     {
-        std::set<std::pair<point const*, float>, priority_compare> output;
-        std::transform(graph.begin(), graph.end(), std::back_inserter(output),
-            [&](point const* p) -> std::pair<point const*, float>{
-                return std::make_pair(p, p_approx.distance(p));
+        std::vector<std::pair<point const*, float>> temp;
+        std::transform(graph.begin(), graph.end(), std::back_inserter(temp),
+            [&](point& p) -> std::pair<point const*, float> {
+                return std::pair<point const*, float>(&p, p_approx.distance(p));
         });
 
-        if (output.size() > 10)
-        output.erase(output.begin() + 10, output.end());
+        std::sort(temp.begin(), temp.end(),
+            [&](const std::pair<point const*, float>& a,
+                const std::pair<point const*, float>& b) {
+                return a.second < b.second;
+        });
+
+        if (temp.size() > 10)
+        temp.erase(temp.begin() + 10, temp.end());
+
+        std::vector<point const*> output;
+        std::transform(temp.begin(), temp.end(), std::back_inserter(output),
+            [&](const std::pair<point const*, float>& p) {
+                return p.first;
+        });
  
         return output;
     }
@@ -125,8 +153,8 @@ namespace dijkstra
         std::unordered_map<point const*, float> visited;
         std::unordered_map<point const*, point const*> previous;
  
-        unvisited.emplace(start, 0);
-        visited.emplace(start, 0);
+        unvisited.emplace(start, 0.0f);
+        visited.emplace(start, 0.0f);
  
         while (!unvisited.empty())
         {

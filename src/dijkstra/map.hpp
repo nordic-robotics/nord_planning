@@ -22,23 +22,6 @@ namespace std {
  
 namespace dijkstra
 {
-    class priority_compare
-    {
-    public:
-        bool operator()(const std::pair<point const*, float>& a,
-                        const std::pair<point const*, float>& b)
-        {
-            if (a.second < b.second)
-                return true;
-            if (b.second < a.second)
-                return false;
- 
-            if (a.first < b.first)
-                return true;
-            return false;
-        }
-    };
-
     class map
     {
     public:
@@ -56,7 +39,7 @@ namespace dijkstra
  
         const std::vector<point>& get_graph() const;
  
-        path& find(const point& start_approx, const point& goal_approx);
+        const path& find(const point& start_approx, const point& goal_approx);
 
         point& operator[](size_t i) { return graph[i]; }
         const point& operator[](size_t i) const { return graph[i]; }
@@ -64,7 +47,7 @@ namespace dijkstra
         map(const map& other) = delete;
  
     private:
-        std::set<std::pair<point const*, float>, priority_compare> closest(const point& p_approx);
+        std::vector<point const*> closest(const point& p_approx);
         void explore(point const* start, std::vector<point const*> goals);
         void insert_all(const std::unordered_map<point const*, float>& visited,
                         const std::unordered_map<point const*, point const*>& previous);
