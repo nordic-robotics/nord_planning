@@ -763,7 +763,7 @@ std::vector<std::vector<std::vector<Position>>> post_process_nodes(std::string f
 
 
     //Printing shit to textfile
-    std::ofstream file1(ros::package::getPath("nord_planning")+"/links2.txt");
+    std::ofstream file1(ros::package::getPath("nord_planning")+"/Tobias_links2.txt");
    for (int i = 0; i < x_max; ++i)
     {
         for (int j = 0; j < y_max; ++j)
@@ -880,7 +880,7 @@ int main(int argc, char** argv)
 
 
 
-    load_graph(ros::package::getPath("nord_planning") + "/Lucas_links.txt", minimum_path);
+    load_graph(ros::package::getPath("nord_planning") + "/Tobias_links2.txt", minimum_path);
     
     
 
