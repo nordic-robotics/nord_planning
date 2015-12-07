@@ -323,13 +323,11 @@ class InitialPath{
         robo_point.scale.y = 0.1f;
         robo_point.scale.z = 0.01f;
 
-        geometry_msgs::Point p1;
-        p1.x = cone.getPosition().x/100.0;
-        p1.y = cone.getPosition().y/100.0;
-        float temp = cone.getPosition().x/100.0f;
-        std::cout <<  temp << std::endl;
-        p1.z = 0.03f;
-        robo_point.points.push_back(p1);
+        
+        robo_point.pose.position.x = cone.getPosition().x/100.0;
+        robo_point.pose.position.y = cone.getPosition().y/100.0;
+        robo_point.pose.position.z = 0.03f;
+        
 
         return robo_point;
     }
