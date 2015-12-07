@@ -98,7 +98,7 @@ namespace dijkstra
  
         auto s_it = start_set.begin();
         auto g_it = goal_set.begin();
-        for (size_t i = 0; i < 10; i++)
+        for (size_t i = 0; i < 1; i++)
         {
             // if it already exists: it's memoized, return it
             auto it = paths.find(std::make_pair(*s_it, *g_it));
@@ -129,14 +129,19 @@ namespace dijkstra
                 return std::pair<point const*, float>(&p, p_approx.distance(p));
         });
 
+        temp.erase(std::remove_if(temp.begin(), temp.end(),
+            [&](const std::pair<point const*, float> p) {
+                return p.first->get_links().size() == 0;
+        }));
+
         std::sort(temp.begin(), temp.end(),
             [&](const std::pair<point const*, float>& a,
                 const std::pair<point const*, float>& b) {
                 return a.second < b.second;
         });
 
-        if (temp.size() > 10)
-        temp.erase(temp.begin() + 10, temp.end());
+        if (temp.size() > 1)
+        temp.erase(temp.begin() + 1, temp.end());
 
         std::vector<point const*> output;
         std::transform(temp.begin(), temp.end(), std::back_inserter(output),

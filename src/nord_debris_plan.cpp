@@ -26,7 +26,7 @@ ros::Publisher abort_pub;
 visualization_msgs::Marker rviz_marker;
 
 int n_wall=29;
-int clear_debris=9;
+int clear_debris=8;
 int n_debris=2*clear_debris+1;
 float min_x, min_y, max_x, max_y;
 std::vector<dijkstra::point> actual_path;
@@ -690,9 +690,22 @@ void DebrisCallBack(const nord_messages::DebrisArray debris_array){
 	flag_nodes=false;
 	map_debris=map_walls;
 	for (auto& debris : debris_array.data)
-	{	
+	{	flag_debris=false;
+		mx0=std::lround(debris.x*100);
+		my0=std::lround(debris.y*100);
+		if(mx0<0){
+			mx0=0;
+		}else if(mx0>int(max_x*100)){
+			mx0=int(max_x*100);
+		}
+		if(my0<0){
+			my0=0;
+		}else if(my0>int(max_y*100)){
+			my0=int(max_y*100);
+		}
+		flag_debris=build_map_debris(mx0,my0,n_debris);
 		//ROS_INFO("New debris");
-		flag_debris=false;
+/*		flag_debris=false;
 		for (size_t i = 0; i <= debris.hull.size() - 1; i++)
 		{
 			// debris.hull[i + 1].x
@@ -1152,7 +1165,7 @@ void DebrisCallBack(const nord_messages::DebrisArray debris_array){
 				//build_map_wall(fx,fy,n_wall);
 			}
 		
-		}
+		}*/
 	//	std::cout <<"flag_debris "<< flag_debris<<std::endl;
 
 		if(flag_debris){//valid debris was placed in the map, check connections
@@ -1199,7 +1212,7 @@ void DebrisCallBack(const nord_messages::DebrisArray debris_array){
 				n++;
 			}
 			if(flag_cut_master){
-				if(flag_nodes==false) abort_pub.publish(std_msgs::Empty());;
+				if(flag_nodes==false) abort_pub.publish(std_msgs::Empty());
 				create_new_nodes(debris);
 				flag_nodes=true;
 				//ROS_INFO("Created nodes");
@@ -1251,10 +1264,10 @@ int main(int argc, char** argv)
     ros::NodeHandle n;
 	
 	ros::Subscriber deb_sub;
-	rviz_pub      = n.advertise<visualization_msgs::Marker>("/nord/debris", 1);
-	deb_sub=n.subscribe("nord/estimation/debris",10,&DebrisCallBack);
-	g_pub=n.advertise<nord_messages::Graph>("/nord/planning/graph",1);
-	abort_pub=n.advertise<std_msgs::Empty>("/nord/houston/mission_abort",1);
+	rviz_pub      = n.advertise<visualization_msgs::Marker>("/nord/debris", 10);
+	deb_sub=n.subscribe("/nord/estimation/debris",20,&DebrisCallBack);
+	g_pub=n.advertise<nord_messages::Graph>("/nord/planning/graph",10);
+	abort_pub=n.advertise<std_msgs::Empty>("/nord/houston/mission_abort",10);
 
 
 	//ROS_INFO("Loads");
