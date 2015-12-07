@@ -342,7 +342,9 @@ namespace graph
 			}
 			file3<<"\n";
 		}
-		file3 << "%";
+		if(!dijk){
+			file3 << "%";
+		}
 	}
 	
 	dijkstra::map* Maps::create_graph(){
@@ -387,10 +389,10 @@ namespace graph
 								//if(mx==0||my==0|| (mx<=30 && my<=30)){
 								int value = 0;
 								if(dijk){
-									value = 160;
+									value = 140;
 								}
 								else{
-									value = 40;
+									value = 30;
 								}
 								if((mx + my <= value || (mx == 0 ) || (my == 0))){
 									if (mx>=my){
