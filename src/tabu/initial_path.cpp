@@ -945,8 +945,8 @@ int main(int argc, char** argv)
                             }
 
 
-                            d.sleep();
                             path.publish_all(current, minimum_path);
+                            d.sleep();
                             if(current.getExplored()[i+(j*x_max)]){
                                 current.move_ok = false;
                                 goto quit_here;
