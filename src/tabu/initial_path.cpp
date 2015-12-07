@@ -929,28 +929,33 @@ int main(int argc, char** argv)
                         dijkstra::path new_path = minimum_path.find(starting_at,go_to);
                         for(size_t k = 1; k < new_path.size(); ++k)
                         {   
-                            temp_cone = current;
+                            // temp_cone = current; //should be commented out
 
                             //testing which rotation explores most
                             current.rotateCone(lround(new_path[k]->x*100),lround(new_path[k]->y*100));
-                            std::cout << "moving to = " << lround(new_path[k]->x*100) << "," << lround(new_path[k]->y*100) << std::endl;
-                            temp_cone.rotateConeOtherWay(lround(new_path[k]->x*100),lround(new_path[k]->y*100));
-                            if(temp_cone.getNumExplored() > (current.getNumExplored()+150)){
-                                current = temp_cone;
-                            }
 
+                            // will be commented out
+                            /////////////////////////////////////////////////////
+                            // std::cout << "moving to = " << lround(new_path[k]->x*100) << "," << lround(new_path[k]->y*100) << std::endl;
+                            // temp_cone.rotateConeOtherWay(lround(new_path[k]->x*100),lround(new_path[k]->y*100));
+                            // if(temp_cone.getNumExplored() > (current.getNumExplored()+150)){
+                            //     current = temp_cone;
+                            // }
+                            ////////////////////////////////////////////////////
+                            //to here
+                            ///////////////////////////////////////////////////
 
                             path.publish_all(current, minimum_path);
                             d.sleep();
-                            if(current.getExplored()[i+(j*x_max)]){
-                                current.move_ok = false;
-                                goto quit_here;
-                            }
-
+                            // if(current.getExplored()[i+(j*x_max)]){
+                            //     current.move_ok = false;
+                            //     goto quit_here;
+                            // }
+                            
                             std::cout << "move_ok = " <<  current.move_ok  << std::endl;    
                             
-                            path.publish_all(current, minimum_path);    
                             current.moveCone(lround(new_path[k]->x*100),lround(new_path[k]->y*100));
+                            path.publish_all(current, minimum_path); 
                             std::cout << "returned from move cone" << std::endl;
                             Position pos(lround(new_path[k]->x*100), lround(new_path[k]->y*100));
                             current.add_to_path(pos);
