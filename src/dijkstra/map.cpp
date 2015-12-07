@@ -10,12 +10,12 @@ namespace dijkstra
         bool operator()(const std::pair<point const*, float>& a,
                         const std::pair<point const*, float>& b)
         {
-            if (b.second < a.second)
-                return true;
             if (a.second < b.second)
+                return true;
+            if (b.second < a.second)
                 return false;
  
-            if (b.first < a.first)
+            if (a.first < b.first)
                 return true;
             return false;
         }
@@ -37,7 +37,13 @@ namespace dijkstra
  
     void map::add(dijkstra::point p)
     {
+        auto cap = graph.capacity();
         graph.push_back(p);
+        if (cap != graph.capacity())
+        {
+            std::cout << "reallocation! aborting.." << std::endl;
+            exit(1);
+        }
     }
  
     void map::remove(unsigned int i)
@@ -45,13 +51,24 @@ namespace dijkstra
         for (auto l : graph[i].get_links())
         {
             l->disconnect(&graph[i]);
+			graph[i].disconnect(l);
         }
         graph.erase(graph.begin() + i);
  
         reset();
     }
+
+    void map::unlink(unsigned int i)
+    {
+        for (auto l : graph[i].get_links())
+        {
+            l->disconnect(&graph[i]);
+            graph[i].disconnect(l);
+        }
+        reset();
+    }
  
-    void map::precompute(const std::vector<point>& points)
+    /*void map::precompute(const std::vector<point>& points)
     {
         for (auto& p1 : points)
         {
@@ -65,7 +82,7 @@ namespace dijkstra
  
             explore(start, goals);
         }
-    }
+    }*/
  
     void map::reset()
     {
@@ -76,39 +93,47 @@ namespace dijkstra
  
     path& map::find(const point& start_approx, const point& goal_approx)
     {
-        auto start = closest(start_approx);
-        auto goal = closest(goal_approx);
+        auto start_set = closest(start_approx);
+        auto goal_set = closest(goal_approx);
  
-        // if it already exists: it's memoized, return it
-        auto it = paths.find(std::make_pair(start, goal));
-        if (it != paths.end())
+        auto s_it = start_set.begin();
+        auto g_it = goal_set.begin();
+        for (size_t i = 0; i < 10; i++)
         {
-            return it->second;
+            // if it already exists: it's memoized, return it
+            auto it = paths.find(std::make_pair(*s_it, *g_it));
+            if (it != paths.end())
+            {
+                return it->second;
+            }
+     
+            // otherwise do some exploring
+            explore(*s_it, {*g_it});
+     
+            // entry should now exist
+            auto path = paths[std::make_pair(*s_it, *g_it)];
+            if (path.size() != 0)
+                return path;
+            ++s_it;
+            ++g_it;
         }
- 
-        // otherwise do some exploring
-        explore(start, {goal});
- 
-        // entry should now exist
-        return paths[std::make_pair(start, goal)];
+
+        return paths[std::make_pair(start_set.front(), goal_set.front())];
     }
  
-    point const* map::closest(const point& p_approx)
+    std::set<std::pair<point const*, float>, priority_compare>
+    map::closest(const point& p_approx)
     {
-        point const* p = nullptr;
-        float min_p = INFINITY;
+        std::set<std::pair<point const*, float>, priority_compare> output;
+        std::transform(graph.begin(), graph.end(), std::back_inserter(output),
+            [&](const point const* p) {
+                return std::make_pair(p, p_approx.distance(p));
+        });
+
+        if (output.size() > 10)
+        output.erase(output.begin() + 10, output.end());
  
-        for (auto& node : graph)
-        {
-            float dist = p_approx.distance(node);
-            if (dist < min_p)
-            {
-                min_p = dist;
-                p = &node;
-            }
-        }
- 
-        return p;
+        return output;
     }
  
     void map::explore(point const* start, std::vector<point const*> goals)

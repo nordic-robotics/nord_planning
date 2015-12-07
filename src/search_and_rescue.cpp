@@ -3,6 +3,7 @@
 #include "visualization_msgs/Marker.h"
 #include "nord_messages/Vector2.h"
 #include "nord_messages/PlanSrv.h"
+#include "nord_messages/Graph.h"
 
 #include <iostream>
 #include <fstream>
@@ -55,6 +56,38 @@ create_lines_message(const std::vector<rviz_line>& lines,
     return line_list;
 }
 
+
+visualization_msgs::Marker
+create_points_message(const std::vector<dijkstra::point>& points,
+                      float r, float g, float b, float a,
+                      int id, float z)
+{
+    visualization_msgs::Marker line_list;
+    line_list.id = id;
+    line_list.type = visualization_msgs::Marker::POINTS;
+    line_list.color.a = a;
+    line_list.color.r = r;
+    line_list.color.g = g;
+    line_list.color.b = b;
+    line_list.header.frame_id = "/map";
+    line_list.header.stamp = ros::Time::now();
+    line_list.ns = "rescue_points";
+    line_list.action = visualization_msgs::Marker::ADD;
+    line_list.pose.orientation.w = 1.0;
+    line_list.lifetime = ros::Duration();
+    line_list.scale.x = 0.01;
+
+    for (auto p : points)
+    {
+        geometry_msgs::Point gp;
+        gp.x = p.x;
+        gp.y = p.y;
+        gp.z = z;
+        line_list.points.push_back(gp);
+    }
+
+    return line_list;
+}
 
 visualization_msgs::Marker
 create_objects_message(const std::vector<std::pair<dijkstra::point,std::string>> objects)
@@ -217,8 +250,27 @@ int main(int argc, char** argv)
     srand(time(NULL));
 
     dijkstra::map graph;
-    load_graph(ros::package::getPath("nord_planning") + "/links.txt", graph);
+    load_graph(ros::package::getPath("nord_planning") + "/Lucas_links2.txt", graph);
     auto objects = load_objects(ros::package::getPath("nord_vision") + "/data/objects.txt");
+
+    ros::Subscriber graph_sub(n.subscribe<nord_messages::Graph>("/nord/planning/graph", 1,
+        [&](const nord_messages::Graph::ConstPtr& msg) {
+            std::vector<dijkstra::point> nodes;
+            std::transform(msg->data.begin(), msg->data.end(), std::back_inserter(nodes),
+                [&](const nord_messages::GraphNode& n) {
+                    return dijkstra::point(n.x, n.y);
+            });
+            graph = dijkstra::map(std::move(nodes));
+
+            for (size_t i = 0; i < msg->data.size(); i++)
+            {
+                for (size_t j = 0; j < msg->data[i].children.size(); j++)
+                {
+                    graph.connect(msg->data[i].id, msg->data[i].children[j]);
+                }
+            }
+    }));
+
 
     auto find_closest = [&](const nord_messages::Vector2& p) {
         dijkstra::point const* closest = nullptr;
@@ -367,6 +419,7 @@ int main(int argc, char** argv)
     };
 
 
+    std::vector<dijkstra::point const*> latest_path;
     auto service = [&](nord_messages::PlanSrv::Request& req,
                        nord_messages::PlanSrv::Response& res) mutable {
         auto start = find_closest(req.start);
@@ -387,10 +440,12 @@ int main(int argc, char** argv)
         }
         else
         {
-            auto dijkstra_path = graph.find(*start, *end);
+            auto dijkstra_path = graph.find(dijkstra::point(start->x, start->y),
+                                            dijkstra::point(end->x, end->y));
             std::transform(dijkstra_path.begin(), dijkstra_path.end(),
                            std::back_inserter(res.path), conversion);
             res.time = path_time(dijkstra_path);
+            latest_path = dijkstra_path;
         }
 
         return true;
@@ -399,7 +454,35 @@ int main(int argc, char** argv)
     ros::ServiceServer srv(n.advertiseService("/nord_planning/plan_service",
                            &decltype(service)::operator(), &service));
 
-    ros::spin();
+    ros::Publisher map_pub(n.advertise<visualization_msgs::Marker>("/nord/map", 1));
+    ros::Rate r(1);
+    while (ros::ok())
+    {
+        std::vector<rviz_line> links;
+        for (auto& p0 : graph.get_graph())
+        {
+            for (auto p1 : p0.get_links())
+            {
+                links.emplace_back(p0.x, p0.y, p1->x, p1->y);
+            }
+        }
+
+        std::vector<rviz_line> dijksta_lines;
+        if (latest_path.size() != 0)
+        {
+            for (size_t i = 0; i < latest_path.size() - 1; i++)
+            {
+                dijksta_lines.emplace_back(latest_path[i]->x, latest_path[i]->y,
+                                           latest_path[i + 1]->x, latest_path[i + 1]->y);
+            }
+        }
+
+        map_pub.publish(create_lines_message(dijksta_lines, 0, 1, 0, 0.6, 1045, 0.05));
+        map_pub.publish(create_lines_message(links, 1, 0, 0, 0.05, 1044, 0));
+        map_pub.publish(create_points_message(graph.get_graph(), 0.6, 0, 0, 0.8, 1046, 0));
+        ros::spinOnce();
+        r.sleep();
+    }
 
     /*
     std::cout << "searching" << std::endl;

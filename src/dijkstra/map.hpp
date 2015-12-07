@@ -25,20 +25,23 @@ namespace dijkstra
     {
     public:
         map() { };
-        map(std::vector<point>&& graph) : graph(graph) { };
-        map(const std::vector<point>& graph) : graph(graph) { };
+        map(std::vector<point>&& graph) : graph(graph) { graph.reserve(100000); };
  
         void connect(unsigned int a, unsigned int b);
         void disconnect(unsigned int a, unsigned int b);
         void remove(unsigned int i);
         void add(dijkstra::point p);
+        void unlink(unsigned int i);
  
-        void precompute(const std::vector<point>& points);
+        //void precompute(const std::vector<point>& points);
         void reset();
  
         const std::vector<point>& get_graph() const;
  
         path& find(const point& start_approx, const point& goal_approx);
+
+        point& operator[](size_t i) { return graph[i]; }
+        const point& operator[](size_t i) const { return graph[i]; }
  
         map(const map& other) = delete;
  

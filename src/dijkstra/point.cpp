@@ -26,7 +26,7 @@ namespace dijkstra
 
     void point::disconnect(point* other)
     {
-        links.erase(std::remove(links.begin(), links.end(), other), links.end());
+        links.erase(std::remove(links.begin(), links.end(), other),links.end());
     }
 
     bool operator==(const point& lhs, const point& rhs)
