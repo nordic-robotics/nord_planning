@@ -426,7 +426,7 @@ int main(int argc, char** argv)
         auto end = find_closest(req.end);
         if (!req.direct)
         {
-            auto result = tabu::search<dijkstra::path>(10000, 1000,
+            auto result = tabu::search<dijkstra::path>(5000, 1000,
                                                        fitness(end),
                                                        random_path(start),
                                                        neighbours(start));
@@ -477,7 +477,7 @@ int main(int argc, char** argv)
             }
         }
 
-        map_pub.publish(create_lines_message(dijksta_lines, 0, 1, 0, 0.6, 1045, 0.05));
+        map_pub.publish(create_lines_message(dijksta_lines, 0, 1, 0, 0.6, 1045, 0.08));
         map_pub.publish(create_lines_message(links, 1, 0, 0, 0.05, 1044, 0));
         map_pub.publish(create_points_message(graph.get_graph(), 0.6, 0, 0, 0.8, 1046, 0));
         ros::spinOnce();

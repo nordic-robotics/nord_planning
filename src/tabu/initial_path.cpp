@@ -870,7 +870,7 @@ int main(int argc, char** argv)
 
     srand(time(NULL));
 	ros::init(argc, argv, "initial_path");
-    map maze = read_map(ros::package::getPath("nord_planning") + "/data/small_maze.txt");
+    map maze = read_map(ros::package::getPath("nord_planning") + "/data/contest_maze.txt");
     // std::vector<std::vector<std::vector<Position>>> node_vector = read_nodes(ros::package::getPath("nord_planning") + "/links.txt", maze.get_max_x(), maze.get_max_y());
     std::valarray<bool> walls = read_walls(ros::package::getPath("nord_planning") + "/Map.txt",maze.get_max_x()*100, maze.get_max_y()*100);
     dijkstra::map minimum_path;
@@ -913,7 +913,7 @@ int main(int argc, char** argv)
     int temp = 0;
     auto temp_cone(current);
     ros::Time time = ros::Time::now();
-    ros::Duration d = ros::Duration(1.5);
+    ros::Duration d = ros::Duration(0.5);
     while(attempts < max_attempts)
     {
         std::cout << "Attempt " << attempts << "/" << max_attempts << std::endl;
@@ -946,7 +946,7 @@ int main(int argc, char** argv)
                             ///////////////////////////////////////////////////
 
                             path.publish_all(current, minimum_path);
-                            d.sleep();
+                            // d.sleep();
                             // if(current.getExplored()[i+(j*x_max)]){
                             //     current.move_ok = false;
                             //     goto quit_here;
@@ -960,7 +960,7 @@ int main(int argc, char** argv)
                             Position pos(lround(new_path[k]->x*100), lround(new_path[k]->y*100));
                             current.add_to_path(pos);
                            
-                            d.sleep();
+                            // d.sleep();
                         }
 
                     }

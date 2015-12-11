@@ -26,7 +26,7 @@ ros::Publisher abort_pub;
 visualization_msgs::Marker rviz_marker;
 
 int n_wall=29;
-int clear_debris=8;
+int clear_debris=12;
 int n_debris=2*clear_debris+1;
 float min_x, min_y, max_x, max_y;
 std::vector<dijkstra::point> actual_path;
@@ -493,7 +493,39 @@ bool create_new_nodes(nord_messages::Debris data){
 	}else if(my0>int(max_y*100)){
 		my0=int(max_y*100);
 	}
-	for(i=0;i<=data.hull.size();i++){
+	fx=mx0+clear_debris+1;
+	fy=my0+clear_debris+1;
+	if(fx < int(max_x*100+1) && fy < int(max_y*100+1) && map_debris[fx][fy]==0){
+		flag_new=true;
+		graph[n_max]=dijkstra::point(fx/100.0f,fy/100.0f);
+		n_max++;
+		//ROS_INFO("new node: %d %d",fx,fy);
+	}
+	fx=mx0-clear_debris-1;
+	fy=my0+clear_debris+1;
+	if(fx >0 && fy < int(max_y*100+1) && map_debris[fx][fy]==0){
+		flag_new=true;
+		graph[n_max]=dijkstra::point(fx/100.0f,fy/100.0f);
+		n_max++;
+		//ROS_INFO("new node: %d %d",fx,fy);
+	}
+	fx=mx0-clear_debris-1;
+	fy=my0-clear_debris-1;
+	if(fx >0 && fy > 0 && map_debris[fx][fy]==0){
+		flag_new=true;
+		graph[n_max]=dijkstra::point(fx/100.0f,fy/100.0f);
+		n_max++;
+		//ROS_INFO("new node: %d %d",fx,fy);
+	}
+	fx=mx0+clear_debris+1;
+	fy=my0-clear_debris-1;
+	if(fx < int(max_x*100+1) && fy > 0 && map_debris[fx][fy]==0){
+		flag_new=true;
+		graph[n_max]=dijkstra::point(fx/100.0f,fy/100.0f);
+		n_max++;
+		//ROS_INFO("new node: %d %d",fx,fy);
+	}
+	/*for(i=0;i<=data.hull.size();i++){
 		//ROS_INFO("beginning");
 		mx1=std::lround(data.hull[i].x*100);
 		my1=std::lround(data.hull[i].y*100);
@@ -517,14 +549,10 @@ bool create_new_nodes(nord_messages::Debris data){
 					a=(((float) my0)-((float) my1))/(((float) mx0)-((float) mx1));
 					b=((float) my1)-(a*((float) mx1));
 					if(mx0<mx1){
-						fx=mx1+clear_debris+1;
+						fx=mx1-+clear_debris+1;
 						f=(a*fx+b);
 						fy=std::lround(f);
-						if(my0<0){
-							my0=0;
-						}else if(my0>int(max_y*100)){
-							my0=int(max_y*100);
-						}
+						-
 						if(fx < int(max_x*100+1) && fy>=0 && fy < int(max_y*100+1) && map_debris[fx][fy]==0){
 							flag_new=true;
 							graph[n_max]=dijkstra::point(fx/100.0f,fy/100.0f);
@@ -612,7 +640,7 @@ bool create_new_nodes(nord_messages::Debris data){
 				}
 			}
 		}
-	}
+	}*/
 	/*for(int fx=0;fx<=int(max_x*100+1);fx++){
 		for(int fy=0;fy<=int(max_y*100+1);fy++){
 			if(map_debris[fx][fy]==2){
@@ -675,7 +703,7 @@ visualization_msgs::Marker rviz_message(void){
 }
 
 void DebrisCallBack(const nord_messages::DebrisArray debris_array){
-	//ROS_INFO("TIME1");	
+	ROS_INFO("TIME1");	
 	map_aux=map;
 	int mx0,mx1,my0,my1;
 	unsigned int n=0;
@@ -690,9 +718,12 @@ void DebrisCallBack(const nord_messages::DebrisArray debris_array){
 	flag_nodes=false;
 	map_debris=map_walls;
 	for (auto& debris : debris_array.data)
-	{	flag_debris=false;
+	{	
+			
+		flag_debris=false;
 		mx0=std::lround(debris.x*100);
 		my0=std::lround(debris.y*100);
+		ROS_INFO("TIME2: %d %d",mx0,my0);
 		if(mx0<0){
 			mx0=0;
 		}else if(mx0>int(max_x*100)){
@@ -703,7 +734,12 @@ void DebrisCallBack(const nord_messages::DebrisArray debris_array){
 		}else if(my0>int(max_y*100)){
 			my0=int(max_y*100);
 		}
-		flag_debris=build_map_debris(mx0,my0,n_debris);
+		if(debris.hull.size()==0){
+			flag_debris=build_map_debris(mx0,my0,7);
+		}else{
+			flag_debris=build_map_debris(mx0,my0,n_debris);
+		}
+		ROS_INFO("TIME3");	
 		//ROS_INFO("New debris");
 /*		flag_debris=false;
 		for (size_t i = 0; i <= debris.hull.size() - 1; i++)
@@ -1172,13 +1208,15 @@ void DebrisCallBack(const nord_messages::DebrisArray debris_array){
 			auto& node=graph.get_graph();
 			bool flag_cut_master=false;
 			while(n<n_max)
-			{   
-				//ROS_INFO("n: %d",n);
+			{   ROS_INFO("TIME4");	
+				ROS_INFO("n: %d / %d",n,n_max);
 				mx0=std::lround(node[n].x * 100);
 				my0=std::lround(node[n].y * 100);
 				flag_cut=false;
 				if(map_debris[mx0][my0]!=0){
+					ROS_INFO("Unlink");
 					graph.unlink(n);
+					ROS_INFO(" finish Unlink");
 					flag_cut=true;
 					flag_cut_master=true;
 				}
@@ -1192,10 +1230,10 @@ void DebrisCallBack(const nord_messages::DebrisArray debris_array){
 						my1=std::lround(link[z]->y*100);
 						unsigned int p;
 						if(check_connection(mx0,my0,mx1,my1)){
-							//ROS_INFO("removing connection: %d %d %d %d",mx0,my0,mx1,my1);
+							ROS_INFO("removing connection: %d %d %d %d",mx0,my0,mx1,my1);
 							for (p=0;p<n_max;p++){
 								if(all_nodes[p].x==link[z]->x && all_nodes[p].y==link[z]->y ){
-									//ROS_INFO("removed connection: %d %d",n,p); 
+									ROS_INFO("removed connection: %d %d",n,p); 
 									graph.disconnect(n, p); 
 									flag_cut_master=true; 
 									break;
@@ -1212,10 +1250,9 @@ void DebrisCallBack(const nord_messages::DebrisArray debris_array){
 				n++;
 			}
 			if(flag_cut_master){
-				if(flag_nodes==false) abort_pub.publish(std_msgs::Empty());
 				create_new_nodes(debris);
 				flag_nodes=true;
-				//ROS_INFO("Created nodes");
+				ROS_INFO("Created nodes");
 			}
 			
 			map_walls=map_debris;
@@ -1249,7 +1286,7 @@ void DebrisCallBack(const nord_messages::DebrisArray debris_array){
 
 		g_pub.publish(msg_graph);
 		abort_pub.publish(std_msgs::Empty());
-		ROS_INFO("TIME3");
+		ROS_INFO("TIME6");
 		
 	}
 	rviz_marker=rviz_message();
@@ -1275,7 +1312,7 @@ int main(int argc, char** argv)
 //ROS_INFO("Loads");
 	//actual_path = read_path(ros::package::getPath("nord_planning")+"/data/plan.txt");
 //ROS_INFO("Loads");
-	map=read_map(ros::package::getPath("nord_planning") + "/data/small_maze.txt");
+	map=read_map(ros::package::getPath("nord_planning") + "/data/contest_maze.txt");
 
 	auto& node=graph.get_graph();
 	unsigned int n1=0;
@@ -1348,7 +1385,7 @@ int main(int argc, char** argv)
 			file2 << "%";
 
 }
-	//ROS_INFO("Starting Spin");	
+	ROS_INFO("Starting Spin");	
 	ros::spin();
     return 0;
 }

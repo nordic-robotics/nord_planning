@@ -12,7 +12,7 @@ namespace graph
 {
 	class Maps{
 	public:
-		int n_wall=29;int n_point=15;
+		int n_wall=37;int n_point=19;
 		Maps(bool dijk);
 		std::vector< std::vector<int> > read_map(std::string filename);
 		void create_pointmap();
